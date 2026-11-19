@@ -40,9 +40,14 @@ describe("toPublicProblem", () => {
 describe("loadBank", () => {
   it("memoizes per directory", () => {
     expect(loadBank("tests/fixtures/problems")).toBe(bank);
-    const other = loadBank("tests/fixtures/nonexistent");
-    expect(other).not.toBe(bank);
-    expect(other.network).toEqual([]);
+    expect(loadBank("tests/fixtures/problems/../problems")).toBe(bank);
+  });
+  it("throws a clear error when the root dir is missing", () => {
+    expect(() => loadBank("tests/fixtures/nonexistent")).toThrow(/problem bank.*nonexistent/i);
+  });
+  it("treats a missing single type dir as empty", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bank-"));
+    expect(loadBank(dir).ai).toEqual([]);
   });
 });
 

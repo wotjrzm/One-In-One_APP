@@ -18,6 +18,12 @@ export function loadBank(dir = "content/problems"): Bank {
   const hit = cache.get(root);
   if (hit) return hit;
 
+  if (!fs.existsSync(root)) {
+    throw new Error(
+      `Problem bank directory not found: ${root}. Is content/problems traced into the deployment (outputFileTracingIncludes)?`,
+    );
+  }
+
   const bank = {} as Bank;
   for (const type of PROBLEM_TYPES) {
     const typeDir = path.join(root, type);

@@ -17,7 +17,7 @@ GitHub로 로그인한 뒤 하루에 AI / 네트워크 / Claude Code / 코딩 �
 
 ## 로컬 실행
 
-필요한 것: Node.js 20 이상, npm.
+필요한 것: Node.js 20 이상, npm. 선택: Python 3 (`python`/`python3`). 코딩 테스트 모범 답안 테스트(`tests/content`)가 Python으로 실행되며, 없으면 해당 테스트는 건너뜁니다.
 
 ```bash
 npm install
@@ -104,7 +104,10 @@ npm test            # 단위 테스트 (Vitest)
 npm run test:e2e    # 화면 테스트 (Playwright)
 npm run lint        # 린트
 npm run build       # 프로덕션 빌드 확인
+npm run check:trace # 빌드 후 실행: 문제 JSON이 서버 함수에 포함됐는지 확인
 ```
+
+`content/problems`는 런타임에 파일로 읽기 때문에 `next.config.ts`의 `outputFileTracingIncludes`로 배포 번들에 포함시킵니다. 이 설정이 빠지면 운영에서 모든 유형이 "준비 중"으로 보입니다. 배포 전에 `npm run build && npm run check:trace`로 확인하세요.
 
 Playwright를 처음 사용할 때는 브라우저를 한 번 설치합니다.
 
