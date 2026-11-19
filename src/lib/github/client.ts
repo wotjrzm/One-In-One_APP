@@ -32,10 +32,11 @@ export async function ensureRepo(
     await gh.rest.repos.createForAuthenticatedUser({
       name,
       private: false,
-      auto_init: true,
+      auto_init: false,
       description: "1일 1학습 기록 (One-In-One)",
     });
-    // auto_init's first commit may not be ready yet; retry the marker write on 404/409.
+    // The marker is the repo's first commit (contents API works on an empty repo, so no auto_init race
+    // can make another process see the repo without the marker). Retry on 404/409 while the repo propagates.
     for (let attempt = 1; ; attempt++) {
       try {
         await gh.rest.repos.createOrUpdateFileContents({

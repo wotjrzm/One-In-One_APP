@@ -82,7 +82,7 @@ describe("ensureRepo", () => {
     expect(create.opts).toMatchObject({
       name: "One-In-One",
       private: false,
-      auto_init: true,
+      auto_init: false,
       description: "1일 1학습 기록 (One-In-One)",
     });
     const puts = calls.filter((x) => x.method === "PUT");
