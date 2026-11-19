@@ -1,6 +1,7 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
-export type Commit = { status: "committed"; url: string } | { status: "pending" };
+export type Commit = { status: "committed"; url: string } | { status: "pending" } | { status: "disconnected" };
 
 export function ResultPanel({
   isCorrect,
@@ -48,6 +49,16 @@ export function ResultPanel({
         <p className="text-sm" style={{ color: "#59636E" }}>
           깃허브에 기록 중이에요. 잠시 후 자동으로 다시 시도해요
         </p>
+      )}
+      {commit?.status === "disconnected" && (
+        <div className="space-y-1">
+          <p className="text-sm" style={{ color: "#BC4C00" }}>
+            저장소 연결이 끊겼어요
+          </p>
+          <Link href="/onboarding" className="inline-flex min-h-11 items-center text-sm font-medium underline" style={{ color: "#1A7F37" }}>
+            저장소 다시 연결하기
+          </Link>
+        </div>
       )}
       {children}
       {explanation !== null && (

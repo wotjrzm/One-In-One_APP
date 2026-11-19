@@ -116,7 +116,7 @@ export default function MePage() {
       <div className={card} style={cardStyle}>
         <div className="flex min-h-11 items-center justify-between gap-3">
           <span className="text-sm font-medium" style={{ color: "#1F2328" }}>
-            랭킹에서 숨기기
+            랭킹에 나를 숨기기
           </span>
           <button
             type="button"

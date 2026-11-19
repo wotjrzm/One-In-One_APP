@@ -94,8 +94,8 @@ export default function HomePage() {
   }
   if (!data) return <Skeleton />;
 
-  const done = data.items.filter((i) => i.status === "correct" || i.status === "wrong").length;
-  const total = data.items.length;
+  const done = data.items.filter((i) => i.status === "correct").length;
+  const total = data.items.filter((i) => i.problem !== null).length;
 
   return (
     <div className="space-y-4">

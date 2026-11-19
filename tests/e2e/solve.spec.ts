@@ -28,12 +28,16 @@ function today(status: "none" | "correct" | "wrong" = "none") {
   };
 }
 
-async function stubApis(page: Page, status: "none" | "correct" | "wrong" = "none") {
+async function stubApis(
+  page: Page,
+  status: "none" | "correct" | "wrong" = "none",
+  commit: { status: string } = { status: "pending" },
+) {
   let submits = 0;
   await page.route("**/api/today", (route) => route.fulfill({ json: today(status) }));
   await page.route("**/api/submit", (route) => {
     submits += 1;
-    return route.fulfill({ json: { isCorrect: false, commit: { status: "pending" } } });
+    return route.fulfill({ json: { isCorrect: false, commit } });
   });
   await page.route("**/api/explanation**", (route) =>
     route.fulfill({ json: { explanation: fixtureExplanation, answerIndex: 2 } }),
@@ -65,6 +69,16 @@ test("choice flow: submit wrong, retry button, explanation only after click", as
   await page.getByRole("button", { name: "다시 풀기" }).click();
   await expect(page.getByRole("radio").nth(1)).toBeChecked();
   await expect(page.getByRole("button", { name: "제출하고 커밋하기" })).toBeEnabled();
+});
+
+test("disconnected repo shows reconnect link instead of auto-retry copy", async ({ page }) => {
+  await stubApis(page, "none", { status: "disconnected" });
+  await page.goto("/solve/network");
+  await page.getByRole("radio").nth(1).check();
+  await page.getByRole("button", { name: "제출하고 커밋하기" }).click();
+  await expect(page.getByText("저장소 연결이 끊겼어요")).toBeVisible();
+  await expect(page.getByRole("link", { name: "저장소 다시 연결하기" })).toHaveAttribute("href", "/onboarding");
+  await expect(page.getByText("잠시 후 자동으로 다시 시도해요")).toHaveCount(0);
 });
 
 test("reopening a wrong problem shows explanation button and editable choices", async ({ page }) => {

@@ -28,7 +28,7 @@ async function stub(page: Page, body: unknown, status = 200) {
 test("home shows progress, links, placeholder and repo banner", async ({ page }) => {
   await stub(page, today());
   await page.goto("/");
-  await expect(page.getByText("2 / 4 완료")).toBeVisible();
+  await expect(page.getByText("1 / 3 완료")).toBeVisible();
   await expect(page.getByText("3일 연속")).toBeVisible();
   await expect(page.getByRole("link", { name: /네트워크/ })).toHaveAttribute("href", "/solve/network");
   await expect(page.getByText("준비 중")).toBeVisible();
@@ -41,7 +41,7 @@ test("no horizontal scroll at 390px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await stub(page, today());
   await page.goto("/");
-  await expect(page.getByText("2 / 4 완료")).toBeVisible();
+  await expect(page.getByText("1 / 3 완료")).toBeVisible();
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(width).toBeLessThanOrEqual(390);
 });

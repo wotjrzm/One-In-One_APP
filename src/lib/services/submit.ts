@@ -59,9 +59,9 @@ export async function submit(
   } catch (e) {
     if (e instanceof RepoAccessError) {
       await deps.store.updateUser(userId, { repoStatus: "disconnected" });
-    } else {
-      console.error(`commit failed for attempt ${attempt.id}`, e);
+      return { ok: true, isCorrect, commit: { status: "disconnected" } };
     }
+    console.error(`commit failed for attempt ${attempt.id}`, e);
     return { ok: true, isCorrect, commit: { status: "pending" } };
   }
   await deps.store.markCommitted(attempt.id, sha);

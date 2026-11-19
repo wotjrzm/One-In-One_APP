@@ -14,7 +14,7 @@ export type Deps = {
 };
 
 export type SubmitResult =
-  | { ok: true; isCorrect: boolean; commit: { status: "committed"; url: string } | { status: "pending" } }
+  | { ok: true; isCorrect: boolean; commit: { status: "committed"; url: string } | { status: "pending" } | { status: "disconnected" } }
   | { ok: false; status: 400; error: "empty" }
   | { ok: false; status: 404; error: "no_problem" }
   | { ok: false; status: 409; error: "date_changed" | "already_solved" }

@@ -180,7 +180,7 @@ describe("services", () => {
   it("revoked access -> disconnected, later submits get 412", async () => {
     github.commit = () => Promise.reject(new RepoAccessError("401"));
     const r = await submit(deps, uid, pick("claude-code", 0));
-    expect(r).toMatchObject({ ok: true, commit: { status: "pending" } });
+    expect(r).toMatchObject({ ok: true, commit: { status: "disconnected" } });
     expect((await store.getUser(uid))!.repoStatus).toBe("disconnected");
     expect(await store.listAttempts(uid, { status: "pending" })).toHaveLength(1);
     const c = todays("coding-test") as CodingProblem;
