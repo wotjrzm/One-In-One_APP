@@ -99,7 +99,7 @@ test("my-rank row is omitted when me is null and not hidden", async ({ page }) =
   await page.route("**/api/ranking*", (route) => route.fulfill({ json: { rows: [row(1, "alice", 4, null)], me: null, hidden: false } }));
   await page.goto("/ranking");
   await expect(page.getByText("alice")).toBeVisible();
-  await expect(page.getByText(/^나 d+위/)).toHaveCount(0);
+  await expect(page.getByText(/^나 \d+위/)).toHaveCount(0);
   await expect(page.getByText("랭킹에서 숨김 상태예요")).toHaveCount(0);
 });
 
