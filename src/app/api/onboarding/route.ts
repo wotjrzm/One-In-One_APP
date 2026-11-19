@@ -16,6 +16,11 @@ export async function POST(req: Request) {
   if (typeof name !== "string") {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  const result = await connectRepo(getDeps(), session.user.id, name);
-  return NextResponse.json({ result });
+  try {
+    const result = await connectRepo(getDeps(), session.user.id, name);
+    return NextResponse.json({ result });
+  } catch (e) {
+    console.error("onboarding connect failed", e);
+    return NextResponse.json({ result: "error" }, { status: 502 });
+  }
 }

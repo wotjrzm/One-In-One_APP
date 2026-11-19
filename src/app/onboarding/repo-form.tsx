@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ERROR_COPY } from "./copy";
 
 export function RepoForm({ defaultName }: { defaultName: string }) {
   const router = useRouter();
@@ -19,18 +20,20 @@ export function RepoForm({ defaultName }: { defaultName: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-      const data = (await res.json()) as { result?: "ok" | "conflict" | "invalid" };
+      const data = (await res.json()) as { result?: "ok" | "conflict" | "invalid" | "error" };
       if (res.ok && data.result === "ok") {
         router.push("/");
         return;
       }
       setError(
-        data.result === "conflict"
+        data.result === "error"
+          ? ERROR_COPY
+          : data.result === "conflict"
           ? "그 이름의 저장소도 이미 있어요. 다른 이름을 입력해 주세요."
           : "저장소 이름을 확인해 주세요.",
       );
     } catch {
-      setError("잠시 후 다시 시도해 주세요.");
+      setError(ERROR_COPY);
     } finally {
       setBusy(false);
     }
