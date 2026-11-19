@@ -1,3 +1,4 @@
+import { isE2EFakeSession } from "@/lib/e2e";
 import NextAuth from "next-auth";
 import { authConfig } from "@/auth.config";
 import { encryptToken } from "@/lib/crypto";
@@ -32,7 +33,7 @@ const nextAuth = NextAuth({
 export const { handlers, signIn, signOut } = nextAuth;
 
 /** Test-only: fixed session for Playwright. Never active in production builds. */
-const e2eFake = process.env.E2E_FAKE_SESSION === "1" && process.env.NODE_ENV !== "production";
+const e2eFake = isE2EFakeSession();
 
 export const auth: typeof nextAuth.auth = e2eFake
   ? ((async () => ({

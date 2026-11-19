@@ -41,7 +41,8 @@ function Chevron() {
 
 function Skeleton() {
   return (
-    <div aria-busy="true" aria-label="불러오는 중" className="space-y-4">
+    <div role="status" className="space-y-4">
+      <span className="sr-only">불러오는 중</span>
       {[96, 176, 320].map((h) => (
         <div key={h} className="animate-pulse rounded-2xl" style={{ height: h, background: "#EBEEF1" }} />
       ))}
@@ -130,7 +131,7 @@ export default function HomePage() {
           className="mb-3 h-2 overflow-hidden rounded-full"
           style={{ background: "#D0D7DE" }}
         >
-          <div className="h-full rounded-full" style={{ width: `${(done / total) * 100}%`, background: "#1A7F37" }} />
+          <div className="h-full rounded-full" style={{ width: `${total ? (done / total) * 100 : 0}%`, background: "#1A7F37" }} />
         </div>
         <ul className="space-y-2">
           {data.items.map((item) => {
@@ -157,7 +158,7 @@ export default function HomePage() {
                     {body}
                   </Link>
                 ) : (
-                  <div aria-disabled="true" className={`${rowClass} opacity-70`} style={cardStyle}>
+                  <div aria-disabled="true" className={rowClass} style={{ ...cardStyle, borderStyle: "dashed" }}>
                     {body}
                   </div>
                 )}

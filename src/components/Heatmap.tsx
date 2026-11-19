@@ -5,7 +5,7 @@ export function Heatmap({ cells }: { cells: HeatmapCell[] }) {
   return (
     <div
       role="img"
-      aria-label="최근 12주 기록"
+      aria-label={`최근 12주 동안 ${cells.filter((c) => c.active).length}일 학습`}
       className="grid justify-center gap-1"
       style={{ gridTemplateRows: "repeat(7, 14px)", gridAutoFlow: "column", gridAutoColumns: "14px" }}
     >

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const heatmap = Array.from({ length: 84 }, (_, i) => ({
-  date: `2026-09-${String((i % 28) + 1).padStart(2, "0")}-${i}`,
+  date: new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10),
   active: i % 5 === 0,
 }));
 
@@ -32,6 +32,7 @@ test("home shows progress, links, placeholder and repo banner", async ({ page })
   await expect(page.getByText("3일 연속")).toBeVisible();
   await expect(page.getByRole("link", { name: /네트워크/ })).toHaveAttribute("href", "/solve/network");
   await expect(page.getByText("준비 중")).toBeVisible();
+  await expect(page.getByRole("link", { name: /AI/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "저장소 다시 연결하기" })).toBeVisible();
   await expect(page.getByRole("link", { name: "홈" })).toHaveAttribute("aria-current", "page");
 });
@@ -47,6 +48,8 @@ test("no horizontal scroll at 390px", async ({ page }) => {
 
 test("repo none redirects to onboarding", async ({ page }) => {
   await stub(page, today({ repo: { name: null, status: "none" } }));
+  // The real onboarding page needs Supabase; stub it so the dev server stays quiet.
+  await page.route("**/onboarding**", (route) => route.fulfill({ contentType: "text/html", body: "<html><body>onboarding</body></html>" }));
   await page.goto("/");
   await expect(page).toHaveURL(/\/onboarding/);
 });
