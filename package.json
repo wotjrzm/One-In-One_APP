@@ -13,6 +13,7 @@
     "@octokit/rest": "^21.1.1",
     "@supabase/supabase-js": "^2.119.1",
     "next": "15.5.29",
+    "next-auth": "^5.0.0-beta.32",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1"
