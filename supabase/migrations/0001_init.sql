@@ -13,4 +13,6 @@ create table attempts (
   commit_sha text, created_at timestamptz not null default now());
 create unique index one_correct_per_day on attempts(user_id, date_kst, type) where is_correct;
 create index attempts_user_date on attempts(user_id, date_kst);
-alter table users enable row level security; alter table attempts enable row level security; -- 정책 없음: service role만 접근
+-- RLS 활성화, 정책 없음: anon/authenticated 접근은 모두 차단, service role만 접근 (RLS 우회)
+alter table users enable row level security;
+alter table attempts enable row level security;

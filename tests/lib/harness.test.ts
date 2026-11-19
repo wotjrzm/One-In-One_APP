@@ -47,6 +47,23 @@ describe("buildHarness", () => {
   });
 });
 
+describe("bool vs int", () => {
+  it("compares bools strictly in the generated program", () => {
+    const src = buildHarness("def f():\n    return True", "f", [{ args: [], expected: 1 }]);
+    expect(src).toContain("isinstance(__norm, bool)");
+  });
+  it.skipIf(!python)("does not treat True as 1 (or 1 as True)", () => {
+    const run = (body: string, expected: unknown) => {
+      const src = buildHarness(`def f():\n    return ${body}`, "f", [{ args: [], expected } as never]);
+      return parseHarnessOutput(spawnSync(python![0], [...python!.slice(1), "-c", src], { encoding: "utf8" }).stdout);
+    };
+    expect(run("True", 1)[0].passed).toBe(false);
+    expect(run("1", true)[0].passed).toBe(false);
+    expect(run("True", true)[0].passed).toBe(true);
+    expect(run("1", 1)[0].passed).toBe(true);
+  });
+});
+
 describe("missing function", () => {
   it.skipIf(!python)("emits one run-level error instead of KeyError", () => {
     const src = buildHarness("x = 1", "solution", tests);

@@ -21,7 +21,7 @@ for __t in __tests:
     try:
         __actual = globals()[${nameLiteral}](*__t["args"])
         __norm = __json.loads(__json.dumps(__actual))
-        if __norm == __t["expected"]:
+        if __norm == __t["expected"] and isinstance(__norm, bool) == isinstance(__t["expected"], bool):
             __results.append({"passed": True})
         else:
             __results.append({"passed": False, "output": __json.dumps(__norm)[:200]})
