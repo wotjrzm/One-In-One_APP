@@ -47,6 +47,15 @@ describe("buildHarness", () => {
   });
 });
 
+describe("missing function", () => {
+  it.skipIf(!python)("emits one run-level error instead of KeyError", () => {
+    const src = buildHarness("x = 1", "solution", tests);
+    const r = spawnSync(python![0], [...python!.slice(1), "-c", src], { encoding: "utf8" });
+    expect(r.status).toBe(0);
+    expect(parseHarnessOutput(r.stdout)).toEqual([{ passed: false, error: "함수 solution를 정의해 주세요" }]);
+  });
+});
+
 describe("parseHarnessOutput", () => {
   it("parses the last non-empty line", () => {
     expect(parseHarnessOutput('noise\n[{"passed":true},{"passed":true},{"passed":false,"output":"2"}]\n')).toEqual([

@@ -8,7 +8,7 @@ self.onmessage = async function (event) {
   try {
     var pyodide = await pyodideReady;
     if (data.init) {
-      self.postMessage({ ready: true });
+      self.postMessage({ ready: true, id: data.id });
       return;
     }
     var lines = [];
@@ -24,8 +24,8 @@ self.onmessage = async function (event) {
     } finally {
       globals.destroy();
     }
-    self.postMessage({ stdout: lines.join("\n") });
+    self.postMessage({ id: data.id, stdout: lines.join("\n") });
   } catch (e) {
-    self.postMessage({ error: String((e && e.message) || e) });
+    self.postMessage({ id: data.id, error: String((e && e.message) || e) });
   }
 };

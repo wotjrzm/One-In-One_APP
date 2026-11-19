@@ -162,6 +162,7 @@ function Solve({ type }: { type: ProblemType }) {
     const out = await runPython(buildHarness(code, p.functionName, p.tests));
     if ("error" in out) return { results: [], error: out.error };
     const results = parseHarnessOutput(out.stdout);
+    if (results.length === 1 && results[0].error && p.tests.length !== 1) return { results: [], error: results[0].error };
     if (results.length !== p.tests.length) return { results: [], error: "결과를 읽지 못했어요" };
     return { results, error: null };
   }
@@ -192,11 +193,15 @@ function Solve({ type }: { type: ProblemType }) {
       setRunning(false);
       setTestResults(error ? null : results);
       setRunError(error ? runErrorText(error) : null);
+      if (error === "load_failed") {
+        setSubmitting(false);
+        return;
+      }
       input = {
         kind: "code",
         code,
         passed: !error && results.length > 0 && results.every((r) => r.passed),
-        results: error ? [{ passed: false, error }] : results,
+        results: error ? [{ passed: false, error: error.slice(0, 200) }] : results,
       };
     } else {
       if (selected === null) return;
@@ -223,6 +228,7 @@ function Solve({ type }: { type: ProblemType }) {
       } else if (res.status === 409 && body.error === "already_solved") {
         setAttempted(true);
         setVerdict({ isCorrect: true });
+        setToday((t) => (t ? { ...t, items: t.items.map((i) => (i.type === type ? { ...i, status: "correct" } : i)) } : t));
       } else if (res.status === 412) {
         setNotice({ text: "저장소 연결이 필요해요.", link: { href: "/onboarding", label: "저장소 다시 연결하기" } });
       } else if (res.status === 400 && body.error === "empty") {
@@ -262,7 +268,7 @@ function Solve({ type }: { type: ProblemType }) {
           problem={problem}
           code={code}
           onChange={setCode}
-          disabled={locked || submitting}
+          disabled={locked || submitting || running}
           onRun={() => void onRun()}
           running={running}
           loadingPython={loadingPython}
@@ -310,7 +316,7 @@ function Solve({ type }: { type: ProblemType }) {
           <button
             type="button"
             onClick={() => void onSubmit()}
-            disabled={emptyInput || submitting}
+            disabled={emptyInput || submitting || running}
             className="mx-auto block min-h-12 w-full max-w-[448px] rounded-xl text-base font-bold text-white disabled:opacity-40"
             style={{ background: "#1A7F37" }}
           >

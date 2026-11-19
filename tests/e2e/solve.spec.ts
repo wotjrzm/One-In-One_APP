@@ -82,3 +82,37 @@ test("unknown type and empty problem show messages", async ({ page }) => {
   await page.goto("/solve/ai");
   await expect(page.getByText(/준비 중/)).toBeVisible();
 });
+
+test("409 date_changed shows notice and refetches today", async ({ page }) => {
+  let todayCalls = 0;
+  await page.route("**/api/today", (route) => {
+    todayCalls += 1;
+    return route.fulfill({ json: today() });
+  });
+  await page.route("**/api/submit", (route) => route.fulfill({ status: 409, json: { error: "date_changed" } }));
+  await page.goto("/solve/network");
+  await page.getByRole("radio").nth(1).check();
+  await page.getByRole("button", { name: "제출하고 커밋하기" }).click();
+  await expect(page.getByText("날짜가 바뀌었어요. 오늘의 문제를 불러올게요")).toBeVisible();
+  await expect.poll(() => todayCalls).toBe(2);
+  await expect(page.getByRole("radio").nth(1)).not.toBeChecked();
+});
+
+test("412 shows a link to onboarding", async ({ page }) => {
+  await page.route("**/api/today", (route) => route.fulfill({ json: today() }));
+  await page.route("**/api/submit", (route) => route.fulfill({ status: 412, json: { error: "repo_not_ready" } }));
+  await page.goto("/solve/network");
+  await page.getByRole("radio").nth(0).check();
+  await page.getByRole("button", { name: "제출하고 커밋하기" }).click();
+  await expect(page.getByRole("link", { name: "저장소 다시 연결하기" })).toHaveAttribute("href", "/onboarding");
+});
+
+test("409 already_solved switches to solved state and checks the tab", async ({ page }) => {
+  await page.route("**/api/today", (route) => route.fulfill({ json: today() }));
+  await page.route("**/api/submit", (route) => route.fulfill({ status: 409, json: { error: "already_solved" } }));
+  await page.goto("/solve/network");
+  await page.getByRole("radio").nth(0).check();
+  await page.getByRole("button", { name: "제출하고 커밋하기" }).click();
+  await expect(page.getByText("정답", { exact: true })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /네트워크/ }).getByRole("img", { name: "완료" })).toBeVisible();
+});

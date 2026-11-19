@@ -14,6 +14,9 @@ export function buildHarness(code: string, functionName: string, tests: CodingTe
 import json as __json
 __tests = __json.loads(${testsLiteral})
 __results = []
+if ${nameLiteral} not in globals():
+    __tests = []
+    __results.append({"passed": False, "error": "함수 " + ${nameLiteral} + "를 정의해 주세요"})
 for __t in __tests:
     try:
         __actual = globals()[${nameLiteral}](*__t["args"])
