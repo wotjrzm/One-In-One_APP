@@ -3,12 +3,24 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   DuplicateCorrectError,
   type AttemptRow,
+  type RankingAttempt,
   type Store,
   type UserRow,
 } from "./types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>;
+
+const toRankingAttempt = (r: Row): RankingAttempt => ({
+  id: r.id,
+  userId: r.user_id,
+  dateKst: r.date_kst,
+  type: r.type,
+  problemId: r.problem_id,
+  isCorrect: r.is_correct,
+  commitStatus: r.commit_status,
+  createdAt: r.created_at,
+});
 
 const toUser = (r: Row): UserRow => ({
   id: r.id,
@@ -142,16 +154,16 @@ class SupabaseStore implements Store {
     const attempts = await fetchAll((from, to) =>
       this.db
         .from("attempts")
-        .select()
+        .select("id, user_id, date_kst, type, problem_id, is_correct, commit_status, created_at")
         .eq("commit_status", "committed")
         .order("created_at", { ascending: true })
         .order("id", { ascending: true })
         .range(from, to),
     );
-    const byUser = new Map<string, AttemptRow[]>();
+    const byUser = new Map<string, RankingAttempt[]>();
     for (const r of attempts) {
       const list = byUser.get(r.user_id) ?? [];
-      list.push(toAttempt(r));
+      list.push(toRankingAttempt(r));
       byUser.set(r.user_id, list);
     }
     return users.map((u) => ({ ...toUser(u), attempts: byUser.get(u.id) ?? [] }));

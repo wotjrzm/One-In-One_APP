@@ -25,6 +25,9 @@ export type AttemptRow = {
   createdAt: string;
 };
 
+/** Attempt as needed for ranking/stats: no payload or commit sha. */
+export type RankingAttempt = Omit<AttemptRow, "payload" | "commitSha">;
+
 export class DuplicateCorrectError extends Error {
   constructor(message = "A correct attempt already exists for this user, date and type") {
     super(message);
@@ -55,7 +58,7 @@ export interface Store {
     opts?: { dateKst?: string; status?: "pending" | "committed" },
   ): Promise<AttemptRow[]>;
   /** Committed attempts only; only users with a repoName (hidden users included). */
-  listRankingUsers(): Promise<(UserRow & { attempts: AttemptRow[] })[]>;
+  listRankingUsers(): Promise<(UserRow & { attempts: RankingAttempt[] })[]>;
   /** Ids of users with repoStatus 'ok' and at least one pending attempt. */
   listUsersWithPending(): Promise<string[]>;
 }
