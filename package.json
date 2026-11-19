@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@octokit/rest": "^21.1.1",
     "@supabase/supabase-js": "^2.119.1",
     "next": "15.5.29",
     "react": "19.1.0",
