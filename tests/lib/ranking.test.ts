@@ -55,3 +55,41 @@ describe("rankUsers displayName", () => {
     expect(rows.find((r) => r.login === "plain")?.displayName).toBeNull();
   });
 });
+
+describe("rankUsers accuracy", () => {
+  const w = (dateKst: string, problemId: string) => ({ dateKst, problemId, type: "ai" as const, isCorrect: false });
+  const hit = at(today, "ai-001");
+
+  it("ranks by correct / counted commits and shows the counts", () => {
+    const sharp = user("sharp", [at(today, "ai-001"), at(today, "ai-002")]); // 2/2
+    const half = user("half", [at(today, "ai-001"), w(today, "ai-002")]); // 1/2
+    const { rows } = rankUsers([half, sharp], "accuracy", "all", today);
+    expect(rows.map((r) => [r.login, r.rank, r.primary, r.secondary, r.total])).toEqual([
+      ["sharp", 1, 100, 2, 2],
+      ["half", 2, 50, 1, 2],
+    ]);
+  });
+
+  it("wrong attempts per problem/day are capped at 4 like the commit count", () => {
+    const spam = user("spam", [hit, ...Array.from({ length: 9 }, () => w(today, "ai-002"))]);
+    const r = rankUsers([spam], "accuracy", "all", today).rows[0];
+    expect([r.secondary, r.total]).toEqual([1, 5]);
+  });
+
+  it("equal percentage: more counted commits ranks higher", () => {
+    const big = user("big", [at(today, "ai-001"), at(today, "ai-002")]);
+    const small = user("small", [at(today, "ai-003")]);
+    expect(rankUsers([small, big], "accuracy", "all", today).rows.map((r) => r.login)).toEqual(["big", "small"]);
+  });
+
+  it("users with no counted commits (and hidden users) are left out; week period filters", () => {
+    const hidden = user("hid", [hit], true);
+    const old = user("old", [at("2026-11-02", "ai-009")]);
+    expect(rankUsers([z, hidden], "accuracy", "all", today).rows).toEqual([]);
+    expect(rankUsers([old, a], "accuracy", "week", today).rows.map((r) => r.login)).toEqual(["a"]);
+  });
+
+  it("other boards keep total null", () => {
+    expect(rankUsers([a], "commits", "all", today).rows[0].total).toBeNull();
+  });
+});

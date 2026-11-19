@@ -1,14 +1,15 @@
 import type { RankRow } from "@/lib/stats/ranking";
 
-export type RankMetric = "consistency" | "problems" | "commits";
+export type RankMetric = "consistency" | "problems" | "commits" | "accuracy";
 export type RankPeriod = "week" | "all";
 
 export const TOP_N = 10;
 
-export function formatValue(row: Pick<RankRow, "primary" | "secondary">, metric: RankMetric, period: RankPeriod): string {
+export function formatValue(row: Pick<RankRow, "primary" | "secondary" | "total">, metric: RankMetric, period: RankPeriod): string {
   if (metric === "consistency") {
     return period === "all" ? `${row.primary}일 · ${row.secondary ?? 0}%` : `${row.primary}일`;
   }
+  if (metric === "accuracy") return `${row.primary}% (${row.secondary ?? 0}/${row.total ?? 0})`;
   return metric === "problems" ? `${row.primary}문제` : `${row.primary}회`;
 }
 

@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
       <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 text-[#1F2328]">
         <h1 className="text-xl font-bold">이름을 알려 주세요</h1>
         <p className="mt-3 text-base text-[#59636E]">
-          랭킹에 GitHub 닉네임과 함께 표시돼요. 나중에 바꿀 수 없으니 신중히 정해 주세요.
+          랭킹에 표시돼요. 나중에 바꿀 수 없어요.
         </p>
         <NameForm />
       </main>

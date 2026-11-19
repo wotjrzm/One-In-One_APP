@@ -1,4 +1,5 @@
 import {
+  accuracyCounts,
   activeDays,
   attendance30,
   countedCommits,
@@ -9,7 +10,10 @@ import {
   type CountedAttempt,
 } from "@/lib/stats/stats";
 
-export type Metric = "consistency" | "problems" | "commits";
+export type Metric = "consistency" | "problems" | "commits" | "accuracy";
+
+/** Minimum counted commits to appear on the accuracy board. */
+export const MIN_ACCURACY_ATTEMPTS = 1;
 export type Period = "week" | "all";
 
 export type RankUser = {
@@ -31,24 +35,31 @@ export type RankRow = {
   repoUrl: string;
   primary: number;
   secondary: number | null;
+  /** accuracy board only: counted commits (secondary = correct ones) */
+  total: number | null;
 };
 
-type Scored = { user: RankUser; keys: number[]; primary: number; secondary: number | null };
+type Scored = { user: RankUser; keys: number[]; primary: number; secondary: number | null; total: number | null };
 
 function score(u: RankUser, metric: Metric, period: Period, today: string): Scored {
+  if (metric === "accuracy") {
+    const { correct, total } = accuracyCounts(period === "week" ? inWeek(u.attempts, today) : u.attempts);
+    const ratio = total === 0 ? 0 : correct / total;
+    return { user: u, keys: [ratio, total], primary: Math.round(ratio * 100), secondary: correct, total };
+  }
   if (metric === "consistency") {
     const days = activeDays(u.attempts);
     const streak = currentStreak(days, today);
     if (period === "all") {
       const att = attendance30(days, today);
-      return { user: u, keys: [streak, att], primary: streak, secondary: Math.round(att * 100) };
+      return { user: u, keys: [streak, att], primary: streak, secondary: Math.round(att * 100), total: null };
     }
     const weekly = weeklyStreak(days, today);
-    return { user: u, keys: [weekly, streak], primary: weekly, secondary: null };
+    return { user: u, keys: [weekly, streak], primary: weekly, secondary: null, total: null };
   }
   const scoped = period === "week" ? inWeek(u.attempts, today) : u.attempts;
   const value = metric === "problems" ? distinctProblems(scoped) : countedCommits(scoped);
-  return { user: u, keys: [value], primary: value, secondary: null };
+  return { user: u, keys: [value], primary: value, secondary: null, total: null };
 }
 
 function compareKeys(a: number[], b: number[]): number {
@@ -65,6 +76,7 @@ export function rankUsers(
   const scored = users
     .filter((u) => !u.hidden)
     .map((u) => score(u, metric, period, today))
+    .filter((s) => metric !== "accuracy" || (s.total ?? 0) >= MIN_ACCURACY_ATTEMPTS)
     .sort((x, y) => compareKeys(x.keys, y.keys) || (x.user.login < y.user.login ? -1 : x.user.login > y.user.login ? 1 : 0));
 
   const rows: RankRow[] = scored.map((s, i) => {
@@ -78,6 +90,7 @@ export function rankUsers(
       repoUrl: `https://github.com/${s.user.login}/${s.user.repoName}`,
       primary: s.primary,
       secondary: s.secondary,
+      total: s.total,
     };
   });
   for (let i = 1; i < rows.length; i++) if (rows[i].rank === 0) rows[i].rank = rows[i - 1].rank;

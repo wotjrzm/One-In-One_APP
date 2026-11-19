@@ -60,6 +60,11 @@ export function countedCommits(a: CountedAttempt[]): number {
   return total;
 }
 
+/** Correct commits vs all counted commits (wrong ones capped per problem/day, same as countedCommits). */
+export function accuracyCounts(a: CountedAttempt[]): { correct: number; total: number } {
+  return { correct: a.filter((x) => x.isCorrect).length, total: countedCommits(a) };
+}
+
 export function inWeek(a: CountedAttempt[], today: string): CountedAttempt[] {
   const start = weekStartKst(today);
   return a.filter((x) => x.dateKst >= start && x.dateKst <= today);

@@ -4,10 +4,10 @@ import { toKstDate } from "@/lib/date";
 import { getDeps } from "@/lib/server/deps";
 import { rankUsers, type Metric, type Period } from "@/lib/stats/ranking";
 
-const METRICS: Metric[] = ["consistency", "problems", "commits"];
+const METRICS: Metric[] = ["consistency", "problems", "commits", "accuracy"];
 const PERIODS: Period[] = ["week", "all"];
 
-/** Returns all three boards (Days / Problems / Commits) for one period in a single response. */
+/** Returns all four boards (Days / Problems / Commits / Accuracy) for one period in a single response. */
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

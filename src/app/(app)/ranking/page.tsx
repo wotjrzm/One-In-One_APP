@@ -16,6 +16,7 @@ const BOARDS: { metric: RankMetric; title: string; hint: string }[] = [
   { metric: "consistency", title: "Days", hint: "연속 학습일" },
   { metric: "problems", title: "Problems", hint: "도전한 문제 수" },
   { metric: "commits", title: "Commits", hint: "커밋 수" },
+  { metric: "accuracy", title: "Accuracy", hint: "정답률" },
 ];
 
 function Skeleton() {
