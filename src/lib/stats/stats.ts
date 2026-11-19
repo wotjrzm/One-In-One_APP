@@ -41,10 +41,6 @@ export function attendance30(days: Set<string>, today: string): number {
   return n / 30;
 }
 
-export function distinctProblems(a: CountedAttempt[]): number {
-  return new Set(a.map((x) => x.problemId)).size;
-}
-
 export function countedCommits(a: CountedAttempt[]): number {
   let correct = 0;
   const wrong = new Map<string, number>();

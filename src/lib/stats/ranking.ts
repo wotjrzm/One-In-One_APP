@@ -4,13 +4,12 @@ import {
   attendance30,
   countedCommits,
   currentStreak,
-  distinctProblems,
   inWeek,
   weeklyStreak,
   type CountedAttempt,
 } from "@/lib/stats/stats";
 
-export type Metric = "consistency" | "problems" | "commits" | "accuracy";
+export type Metric = "consistency" | "commits" | "accuracy";
 
 /** Minimum counted commits to appear on the accuracy board. */
 export const MIN_ACCURACY_ATTEMPTS = 1;
@@ -58,7 +57,7 @@ function score(u: RankUser, metric: Metric, period: Period, today: string): Scor
     return { user: u, keys: [weekly, streak], primary: weekly, secondary: null, total: null };
   }
   const scoped = period === "week" ? inWeek(u.attempts, today) : u.attempts;
-  const value = metric === "problems" ? distinctProblems(scoped) : countedCommits(scoped);
+  const value = countedCommits(scoped);
   return { user: u, keys: [value], primary: value, secondary: null, total: null };
 }
 

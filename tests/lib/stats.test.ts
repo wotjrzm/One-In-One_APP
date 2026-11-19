@@ -4,7 +4,6 @@ import {
   attendance30,
   countedCommits,
   currentStreak,
-  distinctProblems,
   heatmap,
   inWeek,
   weeklyStreak,
@@ -37,9 +36,6 @@ describe("stats", () => {
     expect(countedCommits(wrong(3))).toBe(3);
   });
 
-  it("distinctProblems", () => {
-    expect(distinctProblems([...wrong(3), { dateKst: today, problemId: "ai-001", type: "ai", isCorrect: true }])).toBe(2);
-  });
 
   it("counts retried attempts by submission date", () => {
     const a = [

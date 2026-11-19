@@ -27,14 +27,14 @@ describe("rankUsers", () => {
   });
 
   it("ties share rank, ordered by login", () => {
-    expect(rankUsers([p2, p1], "problems", "all", today).rows.map((r) => [r.login, r.rank])).toEqual([
+    expect(rankUsers([p2, p1], "commits", "all", today).rows.map((r) => [r.login, r.rank])).toEqual([
       ["p1", 1],
       ["p2", 1],
     ]);
   });
 
   it("standard competition ranking (1,1,3)", () => {
-    const rows = rankUsers([p1, p2, a], "problems", "all", today).rows;
+    const rows = rankUsers([p1, p2, z], "commits", "all", today).rows;
     expect(rows.map((r) => r.rank)).toEqual([1, 1, 3]);
   });
 

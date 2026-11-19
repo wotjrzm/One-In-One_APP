@@ -16,7 +16,6 @@ const boards = (period: string | null) => ({
     rows: period === "all" ? [row(1, "alice", 5, 80, "앨리스")] : [row(1, "alice", 4, null, "앨리스")],
     me: row(23, "e2e", 1, period === "all" ? 40 : null),
   },
-  problems: { rows: [row(1, "bob", 7, null)], me: row(3, "e2e", 2, null) },
   commits: { rows: [row(1, "alice", 12, null, "앨리스"), row(2, "bob", 9, null)], me: row(5, "e2e", 3, null) },
   accuracy: { rows: [{ ...row(1, "bob", 75, 3), total: 4 }], me: { ...row(9, "e2e", 50, 1), total: 2 } },
 });
@@ -31,12 +30,12 @@ test("ranking shows Days, Problems and Commits together on one screen", async ({
 
   await page.goto("/ranking");
   await expect(page.getByRole("tab", { name: "이번 주" })).toHaveAttribute("aria-selected", "true");
-  for (const title of ["Days", "Problems", "Commits", "Accuracy"]) {
+  for (const title of ["Days", "Commits", "Accuracy"]) {
     await expect(page.getByRole("heading", { name: new RegExp(`^${title}`) })).toBeVisible();
   }
   await expect(page.getByRole("tab", { name: "꾸준성" })).toHaveCount(0);
   await expect(page.getByText("4일", { exact: true })).toBeVisible();
-  await expect(page.getByText("7문제")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Problems/ })).toHaveCount(0);
   await expect(page.getByText("12회")).toBeVisible();
   await expect(page.getByText("75% (3/4)")).toBeVisible();
   await expect(page.getByText("50% (1/2)")).toBeVisible();
@@ -60,10 +59,10 @@ test("ranking shows Days, Problems and Commits together on one screen", async ({
 test("ranking empty and hidden states", async ({ page }) => {
   const empty = { rows: [], me: null };
   await page.route("**/api/ranking*", (route) =>
-    route.fulfill({ json: { boards: { consistency: empty, problems: empty, commits: empty, accuracy: empty }, hidden: true } }),
+    route.fulfill({ json: { boards: { consistency: empty, commits: empty, accuracy: empty }, hidden: true } }),
   );
   await page.goto("/ranking");
-  await expect(page.getByText("아직 랭킹에 오른 사람이 없어요")).toHaveCount(4);
+  await expect(page.getByText("아직 랭킹에 오른 사람이 없어요")).toHaveCount(3);
   await expect(page.getByText("랭킹에서 숨김 상태예요")).toBeVisible();
 });
 
@@ -101,7 +100,7 @@ test("stale ranking response does not overwrite newer tab data", async ({ page }
     if (period !== "all") await new Promise((r) => setTimeout(r, 1500));
     const who = period === "all" ? "allguy" : "slowguy";
     const board = { rows: [row(1, who, 7, null)], me: null };
-    await route.fulfill({ json: { boards: { consistency: board, problems: board, commits: board, accuracy: board }, hidden: false } }).catch(() => {});
+    await route.fulfill({ json: { boards: { consistency: board, commits: board, accuracy: board }, hidden: false } }).catch(() => {});
   });
   await page.goto("/ranking");
   await page.getByRole("tab", { name: "전체" }).click();
@@ -114,7 +113,7 @@ test("stale ranking response does not overwrite newer tab data", async ({ page }
 test("my-rank row is omitted when me is null and not hidden", async ({ page }) => {
   const board = { rows: [row(1, "alice", 4, null)], me: null };
   await page.route("**/api/ranking*", (route) =>
-    route.fulfill({ json: { boards: { consistency: board, problems: board, commits: board, accuracy: board }, hidden: false } }),
+    route.fulfill({ json: { boards: { consistency: board, commits: board, accuracy: board }, hidden: false } }),
   );
   await page.goto("/ranking");
   await expect(page.getByText("alice").first()).toBeVisible();
