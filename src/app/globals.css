@@ -16,11 +16,11 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-wrong: var(--wrong);
-  --font-sans: var(--font-noto-sans-kr), sans-serif;
+  --font-sans: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-noto-sans-kr), sans-serif;
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", system-ui, sans-serif;
 }
