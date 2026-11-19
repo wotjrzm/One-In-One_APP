@@ -7,6 +7,10 @@ import type { SubmissionInput } from "@/lib/submission/validate";
 
 const bad = () => NextResponse.json({ error: "bad_request" }, { status: 400 });
 
+const MAX_CODE_CHARS = 20000;
+const MAX_RESULTS = 50;
+const MAX_RESULT_TEXT = 200;
+
 function parseInput(v: unknown): SubmissionInput | null {
   if (!v || typeof v !== "object") return null;
   const i = v as Record<string, unknown>;
@@ -19,12 +23,19 @@ function parseInput(v: unknown): SubmissionInput | null {
     if (typeof i.code !== "string" || typeof i.passed !== "boolean" || !Array.isArray(i.results)) {
       return null;
     }
+    if (i.code.length > MAX_CODE_CHARS || i.results.length > MAX_RESULTS) return null;
     const results: { passed: boolean; output?: string; error?: string }[] = [];
     for (const r of i.results) {
       if (!r || typeof r !== "object" || typeof (r as { passed?: unknown }).passed !== "boolean") {
         return null;
       }
       const { passed, output, error } = r as { passed: boolean; output?: unknown; error?: unknown };
+      if (
+        (typeof output === "string" && output.length > MAX_RESULT_TEXT) ||
+        (typeof error === "string" && error.length > MAX_RESULT_TEXT)
+      ) {
+        return null;
+      }
       results.push({
         passed,
         ...(typeof output === "string" ? { output } : {}),

@@ -72,6 +72,31 @@ describe("POST /api/submit", () => {
     expect((await POST(bad)).status).toBe(400);
   });
 
+  describe("code input size caps", () => {
+    const code = (over: Record<string, unknown> = {}) => ({
+      type: "coding-test",
+      problemId: "coding-test-001",
+      input: { kind: "code", code: "def solution(): pass", passed: true, results: [{ passed: true }], ...over },
+    });
+    it("accepts input at the limits (reaches the service: no such problem -> 404)", async () => {
+      const edge = code({
+        code: "x".repeat(20000),
+        results: Array.from({ length: 50 }, () => ({ passed: true, output: "o".repeat(200), error: "e".repeat(200) })),
+      });
+      expect((await POST(req(edge))).status).toBe(404);
+    });
+    it.each([
+      ["code over 20000 chars", { code: "x".repeat(20001) }],
+      ["more than 50 results", { results: Array.from({ length: 51 }, () => ({ passed: true })) }],
+      ["output over 200 chars", { results: [{ passed: false, output: "o".repeat(201) }] }],
+      ["error over 200 chars", { results: [{ passed: false, error: "e".repeat(201) }] }],
+    ])("400 bad_request for %s", async (_n, over) => {
+      const res = await POST(req(code(over)));
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: "bad_request" });
+    });
+  });
+
   it("409 date_changed when the problem is not today's", async () => {
     const res = await POST(req({ type: "network", problemId: "not-today", input: choiceInput }));
     expect(res.status).toBe(409);
