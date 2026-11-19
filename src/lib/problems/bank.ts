@@ -4,8 +4,6 @@ import { PROBLEM_TYPES, ROTATION_EPOCH, type ProblemType } from "@/lib/types";
 import { daysBetween } from "@/lib/date";
 import {
   parseProblem,
-  type ChoiceProblem,
-  type CodingProblem,
   type Problem,
   type PublicProblem,
 } from "./schema";
@@ -28,9 +26,19 @@ export function loadBank(dir = "content/problems"): Bank {
       : [];
     bank[type] = files
       .map((f) => {
-        const problem = parseProblem(JSON.parse(fs.readFileSync(path.join(typeDir, f), "utf8")));
+        const file = path.join(typeDir, f);
+        let raw: unknown;
+        try {
+          raw = JSON.parse(fs.readFileSync(file, "utf8"));
+        } catch (e) {
+          throw new Error(`Cannot read problem file ${file}: ${(e as Error).message}`);
+        }
+        const problem = parseProblem(raw);
         if (`${problem.id}.json` !== f) {
-          throw new Error(`Problem ${problem.id}: filename ${f} does not match id`);
+          throw new Error(`Problem ${problem.id}: filename ${file} does not match id`);
+        }
+        if (problem.type !== type) {
+          throw new Error(`Problem ${problem.id}: type ${problem.type} does not match directory ${type} (${file})`);
         }
         return problem;
       })
@@ -49,15 +57,10 @@ export function getDailyProblem(bank: Bank, type: ProblemType, date: string): Pr
 }
 
 export function toPublicProblem(p: Problem): PublicProblem {
+  const { id, title, prompt } = p;
   if (p.type === "coding-test") {
-    const pub: Partial<CodingProblem> = { ...p };
-    delete pub.explanation;
-    delete pub.reviewed;
-    return pub as PublicProblem;
+    const { examples, starterCode, functionName, tests } = p;
+    return { id, type: p.type, title, prompt, examples, starterCode, functionName, tests };
   }
-  const pub: Partial<ChoiceProblem> = { ...p };
-  delete pub.answerIndex;
-  delete pub.explanation;
-  delete pub.reviewed;
-  return pub as PublicProblem;
+  return { id, type: p.type, title, prompt, choices: p.choices };
 }

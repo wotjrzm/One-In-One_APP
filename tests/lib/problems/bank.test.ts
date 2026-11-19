@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadBank, getDailyProblem, toPublicProblem } from "@/lib/problems/bank";
 import { parseProblem } from "@/lib/problems/schema";
@@ -53,5 +56,36 @@ describe("parseProblem", () => {
     expect(() =>
       parseProblem({ id: "coding-test-009", type: "coding-test", title: "t", prompt: "p", explanation: "e", reviewed: true, examples: [], starterCode: "", functionName: "f", tests: [] }),
     ).toThrow(/coding-test-009/);
+  });
+});
+
+describe("loadBank hardening", () => {
+  function tmpBank(type: string, file: string, content: string): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bank-"));
+    fs.mkdirSync(path.join(dir, type));
+    fs.writeFileSync(path.join(dir, type, file), content);
+    return dir;
+  }
+  const net = (id: string, extra: object = {}) =>
+    JSON.stringify({ id, type: "network", title: "t", prompt: "p", choices: ["a", "b", "c", "d"], answerIndex: 0, explanation: "e", reviewed: true, ...extra });
+
+  it("throws with the path when JSON is malformed", () => {
+    const dir = tmpBank("network", "network-001.json", "{ not json");
+    expect(() => loadBank(dir)).toThrow(/network-001\.json/);
+  });
+  it("throws when filename does not match id", () => {
+    const dir = tmpBank("network", "network-002.json", net("network-001"));
+    expect(() => loadBank(dir)).toThrow(/network-002\.json/);
+  });
+  it("throws when type does not match its directory", () => {
+    const dir = tmpBank("ai", "network-001.json", net("network-001"));
+    expect(() => loadBank(dir)).toThrow(/ai/);
+  });
+  it("toPublicProblem never leaks unknown keys", () => {
+    const dir = tmpBank("network", "network-001.json", net("network-001", { answer: "A", secret: 1 }));
+    const pub = toPublicProblem(loadBank(dir).network[0]);
+    expect(pub).not.toHaveProperty("answer");
+    expect(pub).not.toHaveProperty("secret");
+    expect(Object.keys(pub).sort()).toEqual(["choices", "id", "prompt", "title", "type"]);
   });
 });
