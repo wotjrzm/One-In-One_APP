@@ -20,6 +20,7 @@ export default function MePage() {
   const [me, setMe] = useState<Me | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError(false);
@@ -37,9 +38,10 @@ export default function MePage() {
   }, [load]);
 
   async function toggle() {
-    if (!me) return;
+    if (!me || saving) return;
     const next = !me.hideFromRanking;
     setSaveError(false);
+    setSaving(true);
     setMe({ ...me, hideFromRanking: next });
     try {
       const res = await fetch("/api/me", {
@@ -51,6 +53,8 @@ export default function MePage() {
     } catch {
       setMe((cur) => (cur ? { ...cur, hideFromRanking: !next } : cur));
       setSaveError(true);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -119,8 +123,9 @@ export default function MePage() {
             role="switch"
             aria-checked={me.hideFromRanking}
             aria-label="랭킹에 나를 숨기기"
+            disabled={saving}
             onClick={() => void toggle()}
-            className="relative h-8 w-14 shrink-0 rounded-full transition-colors"
+            className="relative h-8 w-14 shrink-0 rounded-full transition-colors disabled:opacity-60"
             style={{ background: me.hideFromRanking ? "#1A7F37" : "#D0D7DE" }}
           >
             <span className="absolute top-1 h-6 w-6 rounded-full bg-white transition-all" style={{ left: me.hideFromRanking ? "1.75rem" : "0.25rem" }} />

@@ -61,7 +61,7 @@ test("profile switch patches immediately and reverts on failure", async ({ page 
       return route.fulfill(fail ? { status: 500, json: { error: "x" } } : { json: { hideFromRanking: true } });
     }
     return route.fulfill({
-      json: { login: "e2e", avatarUrl: "", repoName: "One-In-One", repoUrl: "https://github.com/e2e/One-In-One", repoStatus: "disconnected", hideFromRanking: false },
+      json: { login: "e2e", avatarUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACw=", repoName: "One-In-One", repoUrl: "https://github.com/e2e/One-In-One", repoStatus: "disconnected", hideFromRanking: false },
     });
   });
 
@@ -75,7 +75,52 @@ test("profile switch patches immediately and reverts on failure", async ({ page 
 
   fail = true;
   await sw.click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.getByText("저장하지 못했어요")).toBeVisible();
   await expect(sw).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+});
+
+test("stale ranking response does not overwrite newer tab data", async ({ page }) => {
+  await page.route("**/api/ranking*", async (route) => {
+    const metric = new URL(route.request().url()).searchParams.get("metric");
+    if (metric === "consistency") await new Promise((r) => setTimeout(r, 1500));
+    const rows = metric === "commits" ? [row(1, "commitguy", 7, null)] : [row(1, "slowguy", 3, null)];
+    await route.fulfill({ json: { rows, me: null, hidden: false } }).catch(() => {});
+  });
+  await page.goto("/ranking");
+  await page.getByRole("tab", { name: "커밋" }).click();
+  await expect(page.getByText("7회")).toBeVisible();
+  await page.waitForTimeout(2000);
+  await expect(page.getByText("7회")).toBeVisible();
+  await expect(page.getByText("slowguy")).toHaveCount(0);
+});
+
+test("my-rank row is omitted when me is null and not hidden", async ({ page }) => {
+  await page.route("**/api/ranking*", (route) => route.fulfill({ json: { rows: [row(1, "alice", 4, null)], me: null, hidden: false } }));
+  await page.goto("/ranking");
+  await expect(page.getByText("alice")).toBeVisible();
+  await expect(page.getByText(/^나 d+위/)).toHaveCount(0);
+  await expect(page.getByText("랭킹에서 숨김 상태예요")).toHaveCount(0);
+});
+
+test("profile switch ignores clicks while PATCH is in flight", async ({ page }) => {
+  let patches = 0;
+  await page.route("**/api/me", async (route) => {
+    if (route.request().method() === "PATCH") {
+      patches++;
+      await new Promise((r) => setTimeout(r, 800));
+      return route.fulfill({ json: { hideFromRanking: true } });
+    }
+    return route.fulfill({
+      json: { login: "e2e", avatarUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACw=", repoName: "R", repoUrl: "https://github.com/e2e/R", repoStatus: "connected", hideFromRanking: false },
+    });
+  });
+  await page.goto("/me");
+  const sw = page.getByRole("switch", { name: "랭킹에 나를 숨기기" });
+  await sw.click();
+  await expect(sw).toBeDisabled();
+  await sw.click({ force: true }).catch(() => {});
+  await expect(sw).toBeEnabled();
+  expect(patches).toBe(1);
+  await expect(sw).toHaveAttribute("aria-checked", "true");
 });

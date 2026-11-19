@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { RankingList, formatValue, type RankMetric, type RankPeriod } from "@/components/RankingList";
 import type { RankRow } from "@/lib/stats/ranking";
 
@@ -66,24 +66,27 @@ function Ranking() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState(false);
 
-  const load = useCallback(async () => {
-    setData(null);
-    setError(false);
-    try {
-      const res = await fetch(`/api/ranking?period=${period}&metric=${metric}`);
-      if (!res.ok) throw new Error(String(res.status));
-      setData((await res.json()) as Data);
-    } catch {
-      setError(true);
-    }
-  }, [period, metric]);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    const ctrl = new AbortController();
+    setData(null);
+    setError(false);
+    (async () => {
+      try {
+        const res = await fetch(`/api/ranking?period=${period}&metric=${metric}`, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(String(res.status));
+        const json = (await res.json()) as Data;
+        if (!ctrl.signal.aborted) setData(json);
+      } catch {
+        if (!ctrl.signal.aborted) setError(true);
+      }
+    })();
+    return () => ctrl.abort();
+  }, [period, metric, attempt]);
 
   const go = (next: { period?: RankPeriod; metric?: RankMetric }) =>
-    router.replace(`/ranking?period=${next.period ?? period}&metric=${next.metric ?? metric}`);
+    router.replace(`/ranking?period=${next.period ?? period}&metric=${next.metric ?? metric}`, { scroll: false });
 
   return (
     <div className="space-y-4" style={{ paddingBottom: "4rem" }}>
@@ -100,7 +103,7 @@ function Ranking() {
           <p className="mb-3 text-sm" style={{ color: "#59636E" }}>
             랭킹을 불러오지 못했어요.
           </p>
-          <button type="button" onClick={() => void load()} className="min-h-11 rounded-lg px-4 text-sm font-medium text-white" style={{ background: "#1A7F37" }}>
+          <button type="button" onClick={() => setAttempt((n) => n + 1)} className="min-h-11 rounded-lg px-4 text-sm font-medium text-white" style={{ background: "#1A7F37" }}>
             다시 시도
           </button>
         </div>
@@ -112,7 +115,7 @@ function Ranking() {
           {(data.hidden || data.me) && (
             <div
               className="fixed inset-x-0 z-10 border-t bg-white px-4 py-3"
-              style={{ bottom: "calc(3.5rem + env(safe-area-inset-bottom))", borderColor: "#D0D7DE" }}
+              style={{ bottom: "calc(3.5rem + 1px + env(safe-area-inset-bottom))", borderColor: "#D0D7DE" }}
             >
               <div className="mx-auto flex max-w-[448px] items-center justify-between text-sm font-bold" style={{ color: "#1F2328" }}>
                 {data.hidden ? (
