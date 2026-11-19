@@ -52,21 +52,24 @@ export async function submit(
     throw e;
   }
 
+  let sha: string;
   try {
     const commit = buildCommit({ dateKst, problem, input, isCorrect });
-    const sha = await deps.github.commit(decryptToken(user.tokenEnc), user.login, user.repoName, commit);
-    await deps.store.markCommitted(attempt.id, sha);
-    return {
-      ok: true,
-      isCorrect,
-      commit: { status: "committed", url: `https://github.com/${user.login}/${user.repoName}/commit/${sha}` },
-    };
+    sha = await deps.github.commit(decryptToken(user.tokenEnc), user.login, user.repoName, commit);
   } catch (e) {
     if (e instanceof RepoAccessError) {
       await deps.store.updateUser(userId, { repoStatus: "disconnected" });
+    } else {
+      console.error(`commit failed for attempt ${attempt.id}`, e);
     }
     return { ok: true, isCorrect, commit: { status: "pending" } };
   }
+  await deps.store.markCommitted(attempt.id, sha);
+  return {
+    ok: true,
+    isCorrect,
+    commit: { status: "committed", url: `https://github.com/${user.login}/${user.repoName}/commit/${sha}` },
+  };
 }
 
 export async function getExplanation(

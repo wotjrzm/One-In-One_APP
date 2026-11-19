@@ -9,7 +9,7 @@ export async function connectRepo(
   userId: string,
   name: string,
 ): Promise<"ok" | "conflict" | "invalid"> {
-  if (!REPO_NAME.test(name)) return "invalid";
+  if (!REPO_NAME.test(name) || /^\.+$/.test(name)) return "invalid";
   const user = await deps.store.getUser(userId);
   if (!user) return "invalid";
   const result = await deps.github.ensureRepo(decryptToken(user.tokenEnc), user.login, name);

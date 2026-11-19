@@ -21,15 +21,22 @@ export async function retryPending(
       input: attempt.payload,
       isCorrect: attempt.isCorrect,
     });
+    let sha: string;
     try {
-      const sha = await deps.github.commit(token, user.login, user.repoName, commit);
-      await deps.store.markCommitted(attempt.id, sha);
-      committed++;
+      sha = await deps.github.commit(token, user.login, user.repoName, commit);
     } catch (e) {
       if (e instanceof RepoAccessError) {
         await deps.store.updateUser(userId, { repoStatus: "disconnected" });
         return { committed, stopped: true };
       }
+      console.error(`retry commit failed for attempt ${attempt.id}`, e);
+      continue;
+    }
+    try {
+      await deps.store.markCommitted(attempt.id, sha);
+      committed++;
+    } catch (e) {
+      console.error(`markCommitted failed for attempt ${attempt.id} (commit ${sha})`, e);
     }
   }
   return { committed, stopped: false };
@@ -37,6 +44,10 @@ export async function retryPending(
 
 export async function retryAll(deps: Deps): Promise<void> {
   for (const id of await deps.store.listUsersWithPending()) {
-    await retryPending(deps, id);
+    try {
+      await retryPending(deps, id);
+    } catch (e) {
+      console.error(`retryPending failed for user ${id}`, e);
+    }
   }
 }

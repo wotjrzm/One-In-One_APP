@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { randomBytes } from "node:crypto";
 import { MemoryStore } from "../fakes/memory-store";
 import { encryptToken } from "@/lib/crypto";
@@ -70,7 +70,11 @@ describe("services", () => {
     input: { kind: "choice" as const, choiceIndex: i },
   });
 
+  let errSpy: ReturnType<typeof vi.spyOn>;
+  afterEach(() => errSpy.mockRestore());
+
   beforeEach(async () => {
+    errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     store = new MemoryStore();
     github = {
       commit: async () => "sha123",
@@ -178,10 +182,12 @@ describe("services", () => {
     const r = await submit(deps, uid, pick("claude-code", 0));
     expect(r).toMatchObject({ ok: true, commit: { status: "pending" } });
     expect((await store.getUser(uid))!.repoStatus).toBe("disconnected");
+    expect(await store.listAttempts(uid, { status: "pending" })).toHaveLength(1);
     const c = todays("coding-test") as CodingProblem;
     expect(
       await submit(deps, uid, { type: "coding-test", problemId: c.id, input: validCode() }),
     ).toMatchObject({ ok: false, status: 412 });
+    expect(await store.listAttempts(uid)).toHaveLength(1);
   });
 
   it("retryPending: oldest first, stops on access error, skips unknown problems", async () => {
@@ -248,5 +254,49 @@ describe("services", () => {
     expect(await connectRepo(deps, uid, "One-In-One-2")).toBe("ok");
     expect(await store.getUser(uid)).toMatchObject({ repoName: "One-In-One-2", repoStatus: "ok" });
     expect(await store.listAttempts(uid, { status: "pending" })).toHaveLength(0);
+  });
+
+  it("connectRepo rejects dot-only names", async () => {
+    expect(await connectRepo(deps, uid, ".")).toBe("invalid");
+    expect(await connectRepo(deps, uid, "..")).toBe("invalid");
+  });
+
+  it("retryAll: one user's failure does not block later users", async () => {
+    const s = new MemoryStore();
+    const bad = await s.upsertUser({ githubId: 10, login: "bad", avatarUrl: "", tokenEnc: "corrupt" });
+    const good = await s.upsertUser({ githubId: 11, login: "good", avatarUrl: "", tokenEnc: encryptToken("tok") });
+    for (const u of [bad, good]) {
+      await s.updateUser(u.id, { repoName: "R", repoStatus: "ok" });
+      await s.insertAttempt({ userId: u.id, dateKst: TODAY, type: "ai", problemId: todays("ai").id, isCorrect: false, payload: { kind: "choice", choiceIndex: 0 } });
+    }
+    await retryAll({ ...deps, store: s });
+    expect(await s.listAttempts(good.id, { status: "committed" })).toHaveLength(1);
+    expect(await s.listAttempts(bad.id, { status: "pending" })).toHaveLength(1);
+    expect(errSpy).toHaveBeenCalled();
+  });
+
+  it("submit: non-access commit error is logged and stays pending", async () => {
+    github.commit = () => Promise.reject(new Error("502"));
+    await submit(deps, uid, pick("ai", 0));
+    expect(errSpy).toHaveBeenCalled();
+  });
+
+  it("submit: markCommitted failure propagates instead of being reported as pending", async () => {
+    store.markCommitted = () => Promise.reject(new Error("db down"));
+    await expect(submit(deps, uid, pick("ai", 0))).rejects.toThrow("db down");
+  });
+
+  it("retryPending: markCommitted failure is logged and processing continues", async () => {
+    github.commit = () => Promise.reject(new Error("502"));
+    for (const t of ["ai", "network"] as const) await submit(deps, uid, pick(t, 0));
+    github.commit = async () => "s";
+    const orig = store.markCommitted.bind(store);
+    let n = 0;
+    store.markCommitted = async (id, sha) => {
+      if (n++ === 0) throw new Error("db down");
+      return orig(id, sha);
+    };
+    expect(await retryPending(deps, uid)).toEqual({ committed: 1, stopped: false });
+    expect(errSpy).toHaveBeenCalled();
   });
 });
