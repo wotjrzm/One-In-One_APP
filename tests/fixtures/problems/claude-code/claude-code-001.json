@@ -1,0 +1,15 @@
+{
+  "id": "claude-code-001",
+  "type": "claude-code",
+  "title": "Fixture claude-code-001",
+  "prompt": "Which one is correct?",
+  "choices": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "answerIndex": 1,
+  "explanation": "Because B.",
+  "reviewed": true
+}

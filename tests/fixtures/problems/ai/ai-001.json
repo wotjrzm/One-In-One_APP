@@ -1,0 +1,15 @@
+{
+  "id": "ai-001",
+  "type": "ai",
+  "title": "Fixture ai-001",
+  "prompt": "Which one is correct?",
+  "choices": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "answerIndex": 1,
+  "explanation": "Because B.",
+  "reviewed": false
+}

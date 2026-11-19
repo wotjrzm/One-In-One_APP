@@ -1,0 +1,15 @@
+{
+  "id": "network-004",
+  "type": "network",
+  "title": "Fixture network-004",
+  "prompt": "Which one is correct?",
+  "choices": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "answerIndex": 1,
+  "explanation": "Because B.",
+  "reviewed": false
+}

@@ -1,0 +1,32 @@
+{
+  "id": "coding-test-001",
+  "type": "coding-test",
+  "title": "Fixture add",
+  "prompt": "Return a + b.",
+  "examples": [
+    {
+      "input": "1 2",
+      "output": "3"
+    }
+  ],
+  "starterCode": "def add(a, b):\n    pass\n",
+  "functionName": "add",
+  "tests": [
+    {
+      "args": [
+        1,
+        2
+      ],
+      "expected": 3
+    },
+    {
+      "args": [
+        0,
+        0
+      ],
+      "expected": 0
+    }
+  ],
+  "explanation": "Just add.",
+  "reviewed": true
+}
