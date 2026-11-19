@@ -16,3 +16,6 @@ create index attempts_user_date on attempts(user_id, date_kst);
 -- RLS 활성화, 정책 없음: anon/authenticated 접근은 모두 차단, service role만 접근 (RLS 우회)
 alter table users enable row level security;
 alter table attempts enable row level security;
+-- 일부 Supabase 프로젝트는 SQL로 만든 테이블에 service_role 권한을 자동 부여하지 않아 "permission denied for table" 이 납니다. 명시적으로 부여합니다.
+grant usage on schema public to service_role;
+grant all on table users, attempts to service_role;
