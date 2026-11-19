@@ -26,6 +26,7 @@ const toUser = (r: Row): UserRow => ({
   id: r.id,
   githubId: Number(r.github_id),
   login: r.login,
+  displayName: r.display_name ?? null,
   avatarUrl: r.avatar_url,
   tokenEnc: r.token_enc,
   repoName: r.repo_name,
@@ -91,9 +92,10 @@ class SupabaseStore implements Store {
 
   async updateUser(
     id: string,
-    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking">>,
+    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking" | "displayName">>,
   ) {
     const row: Row = {};
+    if (patch.displayName !== undefined) row.display_name = patch.displayName;
     if (patch.repoName !== undefined) row.repo_name = patch.repoName;
     if (patch.repoStatus !== undefined) row.repo_status = patch.repoStatus;
     if (patch.hideFromRanking !== undefined) row.hide_from_ranking = patch.hideFromRanking;

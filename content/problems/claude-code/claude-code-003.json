@@ -11,5 +11,5 @@
   ],
   "answerIndex": 0,
   "explanation": "스킬은 SKILL.md에 절차나 지침을 담은 폴더로, 평소에는 이름과 설명만 보이다가 Claude가 설명을 보고 관련 있다고 판단하거나 사용자가 /스킬이름으로 호출할 때 본문을 불러옵니다. 그래서 description에 언제 쓰는 스킬인지 분명히 적는 것이 중요합니다. 매 세션 항상 전부 불러오는 것은 CLAUDE.md의 특징이라 헷갈리기 쉽고, 외부 서비스 연결은 MCP 서버의 역할입니다.",
-  "reviewed": false
+  "reviewed": true
 }

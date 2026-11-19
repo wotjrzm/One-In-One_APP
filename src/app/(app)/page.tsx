@@ -16,6 +16,7 @@ type Today = {
   streak: number;
   heatmap: HeatmapCell[];
   repo: { name: string | null; status: "none" | "connected" | "disconnected" };
+  needsName?: boolean;
 };
 
 const BADGE: Record<Status, { text: string; bg: string; fg: string }> = {
@@ -61,7 +62,7 @@ export default function HomePage() {
       const res = await fetch("/api/today");
       if (!res.ok) throw new Error(String(res.status));
       const json = (await res.json()) as Today;
-      if (json.repo.status === "none") {
+      if (json.repo.status === "none" || json.needsName) {
         router.replace("/onboarding");
         return;
       }

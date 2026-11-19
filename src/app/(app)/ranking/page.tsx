@@ -2,19 +2,20 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { RankingList, formatValue, type RankMetric, type RankPeriod } from "@/components/RankingList";
+import { RankingList, type RankMetric, type RankPeriod } from "@/components/RankingList";
 import type { RankRow } from "@/lib/stats/ranking";
 
-type Data = { rows: RankRow[]; me: RankRow | null; hidden: boolean };
+type Board = { rows: RankRow[]; me: RankRow | null };
+type Data = { boards: Record<RankMetric, Board>; hidden: boolean };
 
 const PERIODS: { value: RankPeriod; label: string }[] = [
   { value: "week", label: "이번 주" },
   { value: "all", label: "전체" },
 ];
-const METRICS: { value: RankMetric; label: string }[] = [
-  { value: "consistency", label: "꾸준성" },
-  { value: "problems", label: "도전 문제" },
-  { value: "commits", label: "커밋" },
+const BOARDS: { metric: RankMetric; title: string; hint: string }[] = [
+  { metric: "consistency", title: "Days", hint: "연속 학습일" },
+  { metric: "problems", title: "Problems", hint: "도전한 문제 수" },
+  { metric: "commits", title: "Commits", hint: "커밋 수" },
 ];
 
 function Skeleton() {
@@ -28,10 +29,10 @@ function Skeleton() {
   );
 }
 
-function Tabs<T extends string>({ label, items, value, onChange }: { label: string; items: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+function PeriodTabs({ value, onChange }: { value: RankPeriod; onChange: (v: RankPeriod) => void }) {
   return (
-    <div role="tablist" aria-label={label} className="flex gap-2">
-      {items.map((item) => {
+    <div role="tablist" aria-label="기간" className="flex gap-2">
+      {PERIODS.map((item) => {
         const on = item.value === value;
         return (
           <button
@@ -60,12 +61,9 @@ function Ranking() {
   const router = useRouter();
   const sp = useSearchParams();
   const period: RankPeriod = sp.get("period") === "all" ? "all" : "week";
-  const m = sp.get("metric");
-  const metric: RankMetric = m === "problems" || m === "commits" ? m : "consistency";
 
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState(false);
-
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -74,7 +72,7 @@ function Ranking() {
     setError(false);
     (async () => {
       try {
-        const res = await fetch(`/api/ranking?period=${period}&metric=${metric}`, { signal: ctrl.signal });
+        const res = await fetch(`/api/ranking?period=${period}`, { signal: ctrl.signal });
         if (!res.ok) throw new Error(String(res.status));
         const json = (await res.json()) as Data;
         if (!ctrl.signal.aborted) setData(json);
@@ -83,20 +81,14 @@ function Ranking() {
       }
     })();
     return () => ctrl.abort();
-  }, [period, metric, attempt]);
-
-  const go = (next: { period?: RankPeriod; metric?: RankMetric }) =>
-    router.replace(`/ranking?period=${next.period ?? period}&metric=${next.metric ?? metric}`, { scroll: false });
+  }, [period, attempt]);
 
   return (
-    <div className="space-y-4" style={{ paddingBottom: "4rem" }}>
+    <div className="space-y-4">
       <h1 className="text-xl font-bold" style={{ color: "#1F2328" }}>
         랭킹
       </h1>
-      <div className="space-y-2">
-        <Tabs label="기간" items={PERIODS} value={period} onChange={(v) => go({ period: v })} />
-        <Tabs label="기준" items={METRICS} value={metric} onChange={(v) => go({ metric: v })} />
-      </div>
+      <PeriodTabs value={period} onChange={(v) => router.replace(`/ranking?period=${v}`, { scroll: false })} />
 
       {error ? (
         <div className="rounded-2xl border bg-white p-4 text-center" style={{ borderColor: "#D0D7DE" }}>
@@ -111,26 +103,22 @@ function Ranking() {
         <Skeleton />
       ) : (
         <>
-          <RankingList rows={data.rows} metric={metric} period={period} />
-          {(data.hidden || data.me) && (
-            <div
-              className="fixed inset-x-0 z-10 border-t bg-white px-4 py-3"
-              style={{ bottom: "calc(3.5rem + 1px + env(safe-area-inset-bottom))", borderColor: "#D0D7DE" }}
-            >
-              <div className="mx-auto flex max-w-[448px] items-center justify-between text-sm font-bold" style={{ color: "#1F2328" }}>
-                {data.hidden ? (
-                  <span style={{ color: "#59636E" }}>랭킹에서 숨김 상태예요</span>
-                ) : (
-                  data.me && (
-                    <>
-                      <span>나 {data.me.rank}위</span>
-                      <span>{formatValue(data.me, metric, period)}</span>
-                    </>
-                  )
-                )}
-              </div>
-            </div>
+          {data.hidden && (
+            <p className="rounded-2xl border bg-white p-3 text-center text-sm" style={{ borderColor: "#D0D7DE", color: "#59636E" }}>
+              랭킹에서 숨김 상태예요
+            </p>
           )}
+          {BOARDS.map(({ metric, title, hint }) => (
+            <section key={metric} aria-labelledby={`board-${metric}`} className="space-y-2">
+              <h2 id={`board-${metric}`} className="flex items-baseline gap-2 text-base font-bold" style={{ color: "#1F2328" }}>
+                {title}
+                <span className="text-xs font-normal" style={{ color: "#59636E" }}>
+                  {hint}
+                </span>
+              </h2>
+              <RankingList rows={data.boards[metric].rows} me={data.boards[metric].me} metric={metric} period={period} />
+            </section>
+          ))}
         </>
       )}
     </div>

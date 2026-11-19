@@ -11,5 +11,5 @@
   ],
   "answerIndex": 3,
   "explanation": "DNS(Domain Name System)는 사람이 기억하기 쉬운 도메인 이름을 컴퓨터가 통신에 쓰는 IP 주소로 변환해 주는 시스템입니다. 기기에 IP 주소를 자동으로 나누어 주는 것은 DHCP의 역할이라 혼동하기 쉽습니다. 암호화는 HTTPS(TLS)가 담당합니다.",
-  "reviewed": false
+  "reviewed": true
 }

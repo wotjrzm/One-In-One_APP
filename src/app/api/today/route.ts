@@ -45,5 +45,6 @@ export async function GET() {
     streak: currentStreak(days, date),
     heatmap: heatmap(days, date),
     repo: { name: user.repoName, status: user.repoStatus },
+    needsName: !user.displayName,
   });
 }

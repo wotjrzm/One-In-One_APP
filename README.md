@@ -62,7 +62,7 @@ npm run dev
 ## Supabase 설정
 
 1. https://supabase.com 에서 새 프로젝트를 만듭니다.
-2. 왼쪽 메뉴의 SQL Editor를 열고, 이 저장소의 `supabase/migrations/0001_init.sql` 내용을 붙여 넣어 실행합니다. `users`, `attempts` 테이블이 생성되고, 두 테이블 모두 RLS(행 수준 보안)가 켜집니다. 정책은 일부러 만들지 않으므로 브라우저(anon 키)에서는 접근할 수 없고, RLS를 우회하는 서버의 service role 키로만 읽고 씁니다.
+2. 왼쪽 메뉴의 SQL Editor를 열고, 이 저장소의 `supabase/migrations/0001_init.sql` 내용을 붙여 넣어 실행합니다. `users`, `attempts` 테이블이 생성되고, 두 테이블 모두 RLS(행 수준 보안)가 켜집니다. 정책은 일부러 만들지 않으므로 브라우저(anon 키)에서는 접근할 수 없고, RLS를 우회하는 서버의 service role 키로만 읽고 씁니다. 이어서 같은 방식으로 `supabase/migrations/0002_display_name.sql`도 실행합니다(랭킹에 표시할 이름 열 `display_name` 추가). 이미 0001만 실행한 프로젝트는 0002만 추가로 실행하면 됩니다.
 3. Project Settings > API 에서 값을 복사합니다.
    - Project URL -> `SUPABASE_URL`
    - `service_role` 키 -> `SUPABASE_SERVICE_ROLE_KEY`

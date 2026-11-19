@@ -42,7 +42,7 @@ describe("content bank", () => {
         const p = parseProblem(JSON.parse(fs.readFileSync(path.join(DIR, t, f), "utf8")));
         expect(f).toBe(`${p.id}.json`);
         expect(p.type).toBe(t);
-        expect(p.reviewed).toBe(false);
+        expect(p.reviewed).toBe(true); // 운영자가 28문제 모두 승인함
       }
     }
   });

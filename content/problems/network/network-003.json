@@ -11,5 +11,5 @@
   ],
   "answerIndex": 2,
   "explanation": "클라이언트가 연결 요청(SYN)을 보내면, 서버가 요청을 받았다는 확인과 자신의 연결 요청을 함께 담은 SYN+ACK로 응답하고, 클라이언트가 마지막으로 ACK를 보내 연결이 성립합니다. FIN은 연결을 맺을 때가 아니라 끊을 때 쓰는 플래그입니다.",
-  "reviewed": false
+  "reviewed": true
 }

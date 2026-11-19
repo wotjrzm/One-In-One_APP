@@ -15,6 +15,7 @@ export type Period = "week" | "all";
 export type RankUser = {
   userId: string;
   login: string;
+  displayName: string | null;
   avatarUrl: string;
   repoName: string;
   hidden: boolean;
@@ -25,6 +26,7 @@ export type RankRow = {
   rank: number;
   userId: string;
   login: string;
+  displayName: string | null;
   avatarUrl: string;
   repoUrl: string;
   primary: number;
@@ -71,6 +73,7 @@ export function rankUsers(
       rank: tied ? 0 : i + 1,
       userId: s.user.userId,
       login: s.user.login,
+      displayName: s.user.displayName,
       avatarUrl: s.user.avatarUrl,
       repoUrl: `https://github.com/${s.user.login}/${s.user.repoName}`,
       primary: s.primary,

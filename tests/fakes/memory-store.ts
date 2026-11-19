@@ -24,6 +24,7 @@ export class MemoryStore implements Store {
     const row: UserRow = {
       id: randomUUID(),
       ...u,
+      displayName: null,
       repoName: null,
       repoStatus: "none",
       hideFromRanking: false,
@@ -39,7 +40,7 @@ export class MemoryStore implements Store {
 
   async updateUser(
     id: string,
-    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking">>,
+    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking" | "displayName">>,
   ) {
     const u = this.users.get(id);
     if (!u) return;

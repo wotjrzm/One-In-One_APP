@@ -7,37 +7,34 @@ import { rankUsers, type Metric, type Period } from "@/lib/stats/ranking";
 const METRICS: Metric[] = ["consistency", "problems", "commits"];
 const PERIODS: Period[] = ["week", "all"];
 
+/** Returns all three boards (Days / Problems / Commits) for one period in a single response. */
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const uid = session.user.id;
 
-  const params = new URL(req.url).searchParams;
-  const metric = params.get("metric") ?? "consistency";
-  const period = params.get("period") ?? "week";
-  if (!METRICS.includes(metric as Metric) || !PERIODS.includes(period as Period)) {
+  const period = new URL(req.url).searchParams.get("period") ?? "week";
+  if (!PERIODS.includes(period as Period)) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
   const deps = getDeps();
   const today = toKstDate(deps.now());
   const [users, me] = await Promise.all([deps.store.listRankingUsers(), deps.store.getUser(uid)]);
-  const ranked = rankUsers(
-    users.map((u) => ({
-      userId: u.id,
-      login: u.login,
-      avatarUrl: u.avatarUrl,
-      repoName: u.repoName ?? "",
-      hidden: u.hideFromRanking,
-      attempts: u.attempts,
-    })),
-    metric as Metric,
-    period as Period,
-    today,
+  const input = users.map((u) => ({
+    userId: u.id,
+    login: u.login,
+    displayName: u.displayName,
+    avatarUrl: u.avatarUrl,
+    repoName: u.repoName ?? "",
+    hidden: u.hideFromRanking,
+    attempts: u.attempts,
+  }));
+  const boards = Object.fromEntries(
+    METRICS.map((metric) => {
+      const ranked = rankUsers(input, metric, period as Period, today);
+      return [metric, { rows: ranked.rows, me: ranked.me(uid) }];
+    }),
   );
-  return NextResponse.json({
-    rows: ranked.rows,
-    me: ranked.me(uid),
-    hidden: me?.hideFromRanking ?? false,
-  });
+  return NextResponse.json({ boards, hidden: me?.hideFromRanking ?? false });
 }

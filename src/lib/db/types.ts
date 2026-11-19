@@ -5,6 +5,7 @@ export type UserRow = {
   id: string;
   githubId: number;
   login: string;
+  displayName: string | null;
   avatarUrl: string;
   tokenEnc: string;
   repoName: string | null;
@@ -45,7 +46,7 @@ export interface Store {
   getUser(id: string): Promise<UserRow | null>;
   updateUser(
     id: string,
-    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking">>,
+    patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking" | "displayName">>,
   ): Promise<void>;
   /** Throws DuplicateCorrectError if a correct attempt already exists for the same user/date/type. */
   insertAttempt(

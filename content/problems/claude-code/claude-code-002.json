@@ -11,5 +11,5 @@
   ],
   "answerIndex": 3,
   "explanation": "/init은 Claude가 코드베이스를 살펴보고 발견한 빌드 명령, 테스트 방법, 프로젝트 규칙으로 CLAUDE.md의 출발점을 만들어 주는 명령입니다. 이미 CLAUDE.md가 있으면 덮어쓰지 않고 개선점을 제안합니다. 이름 때문에 git init처럼 저장소를 초기화한다고 오해하기 쉽지만 git 기록에는 손대지 않습니다.",
-  "reviewed": false
+  "reviewed": true
 }

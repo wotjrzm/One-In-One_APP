@@ -1,5 +1,6 @@
 import { decryptToken } from "@/lib/crypto";
 import { DEFAULT_REPO, FALLBACK_REPO } from "@/lib/types";
+import { normalizeDisplayName } from "@/lib/profile";
 import { retryPending } from "./retry";
 import type { Deps } from "./types";
 
@@ -20,17 +21,28 @@ export async function connectRepo(
   return "ok";
 }
 
+export async function setDisplayName(deps: Deps, userId: string, input: unknown): Promise<"ok" | "invalid"> {
+  const name = normalizeDisplayName(input);
+  if (!name) return "invalid";
+  const user = await deps.store.getUser(userId);
+  if (!user) return "invalid";
+  await deps.store.updateUser(userId, { displayName: name });
+  return "ok";
+}
+
 export const isUnauthorized = (e: unknown): boolean =>
   typeof e === "object" && e !== null && (e as { status?: unknown }).status === 401;
 
 export type OnboardingStart =
   | { kind: "done" }
+  | { kind: "name" }
   | { kind: "form"; defaultName: string; reason: "conflict" | "error" | "reauth" }
   | { kind: "relogin" };
 
 export async function startOnboarding(deps: Deps, userId: string): Promise<OnboardingStart> {
   const user = await deps.store.getUser(userId);
   if (!user) return { kind: "relogin" };
+  if (!user.displayName) return { kind: "name" };
   if (user.repoStatus === "ok") return { kind: "done" };
   const name = user.repoName ?? DEFAULT_REPO;
   try {

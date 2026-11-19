@@ -15,7 +15,7 @@ import { PROBLEM_TYPES, type ProblemType } from "@/lib/types";
 
 type Status = "correct" | "wrong" | "none";
 type TodayItem = { type: ProblemType; label: string; problem: PublicProblem | null; status: Status };
-type Today = { date: string; items: TodayItem[]; repo: { status: "none" | "connected" | "disconnected" } };
+type Today = { date: string; items: TodayItem[]; repo: { status: "none" | "connected" | "disconnected" }; needsName?: boolean };
 type Verdict = { isCorrect: boolean; commit?: Commit };
 type Notice = { text: string; link?: { href: string; label: string } };
 
@@ -85,7 +85,7 @@ function Solve({ type }: { type: ProblemType }) {
         const res = await fetch("/api/today");
         if (!res.ok) throw new Error(String(res.status));
         const json = (await res.json()) as Today;
-        if (json.repo.status === "none") {
+        if (json.repo.status === "none" || json.needsName) {
           router.replace("/onboarding");
           return;
         }

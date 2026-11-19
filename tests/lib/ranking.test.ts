@@ -4,7 +4,7 @@ import { rankUsers, type RankUser } from "@/lib/stats/ranking";
 const today = "2026-11-19";
 const at = (dateKst: string, problemId = "ai-001") => ({ dateKst, problemId, type: "ai" as const, isCorrect: true });
 const user = (login: string, attempts: RankUser["attempts"], hidden = false): RankUser => ({
-  userId: `id-${login}`, login, avatarUrl: `https://a/${login}`, repoName: "One-In-One", hidden, attempts,
+  userId: `id-${login}`, login, displayName: null, avatarUrl: `https://a/${login}`, repoName: "One-In-One", hidden, attempts,
 });
 
 const a = user("a", [at("2026-11-17"), at("2026-11-18"), at("2026-11-19")]);
@@ -44,5 +44,14 @@ describe("rankUsers", () => {
     expect(r.map((x) => [x.login, x.primary])).toEqual([["a", 3], ["old", 0]]);
     expect(rankUsers([a], "consistency", "week", today).rows[0].secondary).toBeNull();
     expect(rankUsers([a], "commits", "all", today).rows[0].secondary).toBeNull();
+  });
+});
+
+describe("rankUsers displayName", () => {
+  it("passes the chosen display name through next to the login", () => {
+    const named = { ...user("octo", [at(today)]), displayName: "옥토" };
+    const { rows } = rankUsers([named, user("plain", [])], "commits", "all", today);
+    expect(rows.find((r) => r.login === "octo")?.displayName).toBe("옥토");
+    expect(rows.find((r) => r.login === "plain")?.displayName).toBeNull();
   });
 });
