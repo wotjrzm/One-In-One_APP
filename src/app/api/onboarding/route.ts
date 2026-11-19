@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getDeps } from "@/lib/server/deps";
-import { connectRepo } from "@/lib/services/onboarding";
+import { connectRepo, isUnauthorized } from "@/lib/services/onboarding";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
     const result = await connectRepo(getDeps(), session.user.id, name);
     return NextResponse.json({ result });
   } catch (e) {
+    if (isUnauthorized(e)) return NextResponse.json({ result: "reauth" }, { status: 401 });
     console.error("onboarding connect failed", e);
     return NextResponse.json({ result: "error" }, { status: 502 });
   }

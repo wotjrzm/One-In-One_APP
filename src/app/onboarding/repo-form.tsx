@@ -20,9 +20,13 @@ export function RepoForm({ defaultName }: { defaultName: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-      const data = (await res.json()) as { result?: "ok" | "conflict" | "invalid" | "error" };
+      const data = (await res.json()) as { result?: "ok" | "conflict" | "invalid" | "error" | "reauth" };
       if (res.ok && data.result === "ok") {
         router.push("/");
+        return;
+      }
+      if (data.result === "reauth") {
+        router.refresh();
         return;
       }
       setError(

@@ -62,6 +62,16 @@ describe("startOnboarding", () => {
     });
   });
 
+  it("returns the reauth form when GitHub answers 401 (revoked token)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    ensureRepo.mockRejectedValue(Object.assign(new Error("Bad credentials"), { status: 401 }));
+    expect(await startOnboarding(deps, uid)).toEqual({
+      kind: "form",
+      defaultName: "One-In-One",
+      reason: "reauth",
+    });
+  });
+
   it("relogin when the user is missing", async () => {
     expect(await startOnboarding(deps, "nope")).toEqual({ kind: "relogin" });
   });

@@ -20,9 +20,12 @@ export async function connectRepo(
   return "ok";
 }
 
+export const isUnauthorized = (e: unknown): boolean =>
+  typeof e === "object" && e !== null && (e as { status?: unknown }).status === 401;
+
 export type OnboardingStart =
   | { kind: "done" }
-  | { kind: "form"; defaultName: string; reason: "conflict" | "error" }
+  | { kind: "form"; defaultName: string; reason: "conflict" | "error" | "reauth" }
   | { kind: "relogin" };
 
 export async function startOnboarding(deps: Deps, userId: string): Promise<OnboardingStart> {
@@ -36,6 +39,7 @@ export async function startOnboarding(deps: Deps, userId: string): Promise<Onboa
     if (result === "conflict") return { kind: "form", defaultName: FALLBACK_REPO, reason: "conflict" };
     return { kind: "relogin" };
   } catch (e) {
+    if (isUnauthorized(e)) return { kind: "form", defaultName: name, reason: "reauth" };
     console.error(`onboarding connect failed for user ${userId}`, e);
     return { kind: "form", defaultName: name, reason: "error" };
   }
