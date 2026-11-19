@@ -20,7 +20,8 @@ export function decryptToken(enc: string): string {
   const parts = enc.split(".");
   if (parts.length !== 3) throw new Error("Malformed encrypted token");
   const [iv, tag, ct] = parts.map((p) => Buffer.from(p, "base64url"));
-  const decipher = createDecipheriv("aes-256-gcm", getKey(), iv);
+  if (iv.length !== 12 || tag.length !== 16) throw new Error("Malformed encrypted token");
+  const decipher = createDecipheriv("aes-256-gcm", getKey(), iv, { authTagLength: 16 });
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(ct), decipher.final()]).toString("utf8");
 }

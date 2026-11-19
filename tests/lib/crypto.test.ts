@@ -21,11 +21,17 @@ describe("token crypto", () => {
   });
 
   it("rejects tampered ciphertext", () => {
-    const enc = encryptToken("x");
-    const parts = enc.split(".");
-    parts[2] = Buffer.from("y").toString("base64url");
-    expect(() => decryptToken(parts.join("."))).toThrow();
-    expect(() => decryptToken(enc.replace(/.$/, (c) => (c === "A" ? "B" : "A")))).toThrow();
+    const [iv, tag, ct] = encryptToken("x").split(".");
+    const bytes = Buffer.from(ct, "base64url");
+    bytes[0] ^= 1;
+    expect(() => decryptToken([iv, tag, bytes.toString("base64url")].join("."))).toThrow();
+  });
+
+  it("rejects tampered auth tag", () => {
+    const [iv, tag, ct] = encryptToken("x").split(".");
+    const bytes = Buffer.from(tag, "base64url");
+    bytes[0] ^= 1;
+    expect(() => decryptToken([iv, bytes.toString("base64url"), ct].join("."))).toThrow();
   });
 
   it("throws when key is missing or wrong length", () => {

@@ -6,6 +6,9 @@ import {
   type UserRow,
 } from "@/lib/db/types";
 
+const byCreatedThenId = (x: AttemptRow, y: AttemptRow) =>
+  x.createdAt.localeCompare(y.createdAt) || x.id.localeCompare(y.id);
+
 /** In-memory Store with the same semantics as the Supabase implementation. */
 export class MemoryStore implements Store {
   private users = new Map<string, UserRow>();
@@ -39,7 +42,8 @@ export class MemoryStore implements Store {
     patch: Partial<Pick<UserRow, "repoName" | "repoStatus" | "hideFromRanking">>,
   ) {
     const u = this.users.get(id);
-    if (u) Object.assign(u, patch);
+    if (!u) return;
+    for (const [k, v] of Object.entries(patch)) if (v !== undefined) Object.assign(u, { [k]: v });
   }
 
   async insertAttempt(a: Omit<AttemptRow, "id" | "commitStatus" | "commitSha" | "createdAt">) {
@@ -76,7 +80,7 @@ export class MemoryStore implements Store {
           (!opts?.dateKst || a.dateKst === opts.dateKst) &&
           (!opts?.status || a.commitStatus === opts.status),
       )
-      .sort((x, y) => x.createdAt.localeCompare(y.createdAt))
+      .sort(byCreatedThenId)
       .map((a) => ({ ...a }));
   }
 
@@ -87,7 +91,7 @@ export class MemoryStore implements Store {
         ...u,
         attempts: this.attempts
           .filter((a) => a.userId === u.id && a.commitStatus === "committed")
-          .sort((x, y) => x.createdAt.localeCompare(y.createdAt))
+          .sort(byCreatedThenId)
           .map((a) => ({ ...a })),
       }));
   }

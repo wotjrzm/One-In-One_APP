@@ -39,6 +39,23 @@ function check<T>(res: { data: T; error: { message: string; code?: string } | nu
   return res.data;
 }
 
+const PAGE = 1000;
+
+/** PostgREST caps unpaginated selects at max_rows; loop with range() until a short page. */
+async function fetchAll(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: any; error: { message: string; code?: string } | null }>,
+): Promise<Row[]> {
+  const out: Row[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const rows = check(await page(from, from + PAGE - 1)) as Row[];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
 class SupabaseStore implements Store {
   constructor(private db: SupabaseClient) {}
 
@@ -99,40 +116,69 @@ class SupabaseStore implements Store {
   }
 
   async listAttempts(userId: string, opts?: { dateKst?: string; status?: "pending" | "committed" }) {
-    let q = this.db.from("attempts").select().eq("user_id", userId);
-    if (opts?.dateKst) q = q.eq("date_kst", opts.dateKst);
-    if (opts?.status) q = q.eq("commit_status", opts.status);
-    const data = check(await q.order("created_at", { ascending: true }));
-    return (data as Row[]).map(toAttempt);
+    const data = await fetchAll((from, to) => {
+      let q = this.db.from("attempts").select().eq("user_id", userId);
+      if (opts?.dateKst) q = q.eq("date_kst", opts.dateKst);
+      if (opts?.status) q = q.eq("commit_status", opts.status);
+      return q
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to);
+    });
+    return data.map(toAttempt);
   }
 
   async listRankingUsers() {
-    const users = check(await this.db.from("users").select().not("repo_name", "is", null)) as Row[];
+    const users = await fetchAll((from, to) =>
+      this.db
+        .from("users")
+        .select()
+        .not("repo_name", "is", null)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
     if (users.length === 0) return [];
-    const attempts = check(
-      await this.db
+    const attempts = await fetchAll((from, to) =>
+      this.db
         .from("attempts")
         .select()
         .eq("commit_status", "committed")
-        .in("user_id", users.map((u) => u.id))
-        .order("created_at", { ascending: true }),
-    ) as Row[];
-    return users.map((u) => ({
-      ...toUser(u),
-      attempts: attempts.filter((a) => a.user_id === u.id).map(toAttempt),
-    }));
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    const byUser = new Map<string, AttemptRow[]>();
+    for (const r of attempts) {
+      const list = byUser.get(r.user_id) ?? [];
+      list.push(toAttempt(r));
+      byUser.set(r.user_id, list);
+    }
+    return users.map((u) => ({ ...toUser(u), attempts: byUser.get(u.id) ?? [] }));
   }
 
   async listUsersWithPending() {
-    const pending = check(
-      await this.db.from("attempts").select("user_id").eq("commit_status", "pending"),
-    ) as Row[];
-    const ids = [...new Set(pending.map((r) => r.user_id as string))];
-    if (ids.length === 0) return [];
-    const users = check(
-      await this.db.from("users").select("id").eq("repo_status", "ok").in("id", ids),
-    ) as Row[];
-    return users.map((u) => u.id as string);
+    const pending = await fetchAll((from, to) =>
+      this.db
+        .from("attempts")
+        .select("id, user_id, created_at")
+        .eq("commit_status", "pending")
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    const ids = new Set(pending.map((r) => r.user_id as string));
+    if (ids.size === 0) return [];
+    const ok = await fetchAll((from, to) =>
+      this.db
+        .from("users")
+        .select("id, created_at")
+        .eq("repo_status", "ok")
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    return ok.map((u) => u.id as string).filter((id) => ids.has(id));
   }
 }
 
