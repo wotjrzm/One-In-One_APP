@@ -19,13 +19,19 @@ function problemMd(problem: Problem): string {
   return lines.join("\n");
 }
 
+function fenceFor(code: string): string {
+  const longest = Math.max(0, ...(code.match(/`+/g) ?? []).map((m) => m.length));
+  return "`".repeat(Math.max(3, longest + 1));
+}
+
 function answerMd(problem: Problem, input: SubmissionInput, isCorrect: boolean): string {
   const lines = [`# ${problem.title}`, "", `결과: ${isCorrect ? "정답" : "오답"}`, ""];
   if (input.kind === "choice" && problem.type !== "coding-test") {
     const i = input.choiceIndex;
     lines.push("## 내가 고른 보기", "", `${CHOICE_MARKERS[i]} ${problem.choices[i]}`, "");
   } else if (input.kind === "code") {
-    lines.push("## 제출한 코드", "", "```python", input.code, "```", "", "## 테스트 결과", "");
+    const fence = fenceFor(input.code);
+    lines.push("## 제출한 코드", "", `${fence}python`, input.code, fence, "", "## 테스트 결과", "");
     input.results.forEach((r, i) => lines.push(`- 테스트 ${i + 1}: ${r.passed ? "통과" : "실패"}`));
     lines.push("");
   }

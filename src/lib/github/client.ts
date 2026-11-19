@@ -16,10 +16,14 @@ export function octokitFor(token: string): Octokit {
 const statusOf = (e: unknown): number | undefined =>
   typeof e === "object" && e !== null && "status" in e ? (e as { status: number }).status : undefined;
 
+const MARKER_ATTEMPTS = 5;
+const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 export async function ensureRepo(
   gh: Octokit,
   owner: string,
   name: string,
+  sleep: (ms: number) => Promise<void> = defaultSleep,
 ): Promise<"created" | "existing" | "conflict"> {
   try {
     await gh.rest.repos.get({ owner, repo: name });
@@ -31,13 +35,23 @@ export async function ensureRepo(
       auto_init: true,
       description: "1일 1학습 기록 (One-In-One)",
     });
-    await gh.rest.repos.createOrUpdateFileContents({
-      owner,
-      repo: name,
-      path: MARKER_FILE,
-      message: "chore: add One-In-One marker",
-      content: Buffer.from("One-In-One study repository\n", "utf8").toString("base64"),
-    });
+    // auto_init's first commit may not be ready yet; retry the marker write on 404/409.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await gh.rest.repos.createOrUpdateFileContents({
+          owner,
+          repo: name,
+          path: MARKER_FILE,
+          message: "chore: add One-In-One marker",
+          content: Buffer.from("One-In-One study repository\n", "utf8").toString("base64"),
+        });
+        break;
+      } catch (err) {
+        const s = statusOf(err);
+        if ((s !== 404 && s !== 409) || attempt >= MARKER_ATTEMPTS) throw err;
+        await sleep(500 * attempt);
+      }
+    }
     return "created";
   }
 

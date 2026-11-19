@@ -22,15 +22,16 @@ const c: Commit = buildCommit({
   isCorrect: false,
 });
 
-type Calls = { method: string; url: string }[];
+type Calls = { method: string; url: string; opts: Record<string, unknown> }[];
 
 /** Real Octokit whose HTTP layer is replaced: listed route templates fail with the given status. */
-function ghWith(overrides: Record<string, number>, calls: Calls = []): Octokit {
+function ghWith(overrides: Record<string, number | number[]>, calls: Calls = []): Octokit {
   const gh = new Octokit();
   gh.hook.wrap("request", async (_request, options) => {
     const route = `${options.method} ${options.url}`;
-    calls.push({ method: options.method, url: options.url });
-    const status = overrides[route];
+    calls.push({ method: options.method, url: options.url, opts: options as Record<string, unknown> });
+    const o = overrides[route];
+    const status = Array.isArray(o) ? o.shift() : o;
     if (status) throw Object.assign(new Error(`HTTP ${status}`), { status });
     const ok = (data: unknown, s = 200) => ({ status: s, headers: {}, url: options.url, data });
     switch (route) {
@@ -68,6 +69,35 @@ describe("ensureRepo", () => {
     const routes = calls.map((x) => `${x.method} ${x.url}`);
     expect(routes).toContain("POST /user/repos");
     expect(routes).toContain("PUT /repos/{owner}/{repo}/contents/{path}");
+  });
+
+  it("creates with the expected payload and retries the marker write on 404/409", async () => {
+    const calls: Calls = [];
+    const gh = ghWith(
+      { "GET /repos/{owner}/{repo}": 404, "PUT /repos/{owner}/{repo}/contents/{path}": [409, 409] },
+      calls,
+    );
+    await expect(ensureRepo(gh, "u", "One-In-One", async () => {})).resolves.toBe("created");
+    const create = calls.find((x) => x.url === "/user/repos")!;
+    expect(create.opts).toMatchObject({
+      name: "One-In-One",
+      private: false,
+      auto_init: true,
+      description: "1일 1학습 기록 (One-In-One)",
+    });
+    const puts = calls.filter((x) => x.method === "PUT");
+    expect(puts).toHaveLength(3);
+    expect(puts[2].opts).toMatchObject({ path: ".one-in-one" });
+  });
+
+  it("gives up after 5 marker attempts and rethrows", async () => {
+    const calls: Calls = [];
+    const gh = ghWith(
+      { "GET /repos/{owner}/{repo}": 404, "PUT /repos/{owner}/{repo}/contents/{path}": [409, 409, 409, 409, 409] },
+      calls,
+    );
+    await expect(ensureRepo(gh, "u", "One-In-One", async () => {})).rejects.toMatchObject({ status: 409 });
+    expect(calls.filter((x) => x.method === "PUT")).toHaveLength(5);
   });
 
   it("reports conflict when the repo exists without the marker", async () => {

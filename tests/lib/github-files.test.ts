@@ -89,6 +89,17 @@ describe("buildCommit", () => {
     expect(cc.files[1].content).toContain("통과");
   });
 
+  it("uses a fence longer than any backtick run in the submitted code", () => {
+    const code = "def solution(a):\n  return '```'";
+    const c = buildCommit({
+      dateKst: "2026-11-19",
+      problem: codingProblem,
+      input: { kind: "code", code, passed: true, results: [{ passed: true }] },
+      isCorrect: true,
+    });
+    expect(c.files[1].content).toContain("````python\n" + code + "\n````");
+  });
+
   it("omits explanation for a wrong coding commit and reports failures", () => {
     const cw = buildCommit({
       dateKst: "2026-11-19",
