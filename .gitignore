@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local scratch
 .superpowers/
+
+# playwright
+/test-results/
+/playwright-report/

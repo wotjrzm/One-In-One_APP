@@ -3,7 +3,7 @@ import { authConfig } from "@/auth.config";
 import { encryptToken } from "@/lib/crypto";
 import { getStore } from "@/lib/db/supabase-store";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   callbacks: {
     async jwt({ token, account, profile }) {
@@ -28,3 +28,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut } = nextAuth;
+
+/** Test-only: fixed session for Playwright. Never active in production builds. */
+const e2eFake = process.env.E2E_FAKE_SESSION === "1" && process.env.NODE_ENV !== "production";
+
+export const auth: typeof nextAuth.auth = e2eFake
+  ? ((async () => ({
+      user: { id: "e2e-user", login: "e2e", image: "" },
+      expires: "2999-01-01T00:00:00.000Z",
+    })) as unknown as typeof nextAuth.auth)
+  : nextAuth.auth;
