@@ -1,0 +1,64 @@
+{
+  "id": "coding-test-005",
+  "type": "coding-test",
+  "title": "팰린드롬 판별",
+  "prompt": "문자열 s가 주어질 때, 앞에서 읽으나 뒤에서 읽으나 같은 문자열(팰린드롬)이면 True, 아니면 False를 반환하는 solution 함수를 작성하세요. 대소문자와 공백도 그대로 구분합니다.",
+  "examples": [
+    {
+      "input": "s = \"level\"",
+      "output": "True"
+    },
+    {
+      "input": "s = \"hello\"",
+      "output": "False"
+    }
+  ],
+  "starterCode": "def solution(s):\n    # 여기에 작성하세요\n    pass\n",
+  "functionName": "solution",
+  "tests": [
+    {
+      "args": [
+        "level"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "hello"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        ""
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "a"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "abba"
+      ],
+      "expected": true
+    },
+    {
+      "args": [
+        "Aa"
+      ],
+      "expected": false
+    },
+    {
+      "args": [
+        "ab"
+      ],
+      "expected": false
+    }
+  ],
+  "explanation": "문자열을 뒤집은 결과가 원래 문자열과 같은지 비교하면 됩니다(s == s[::-1]). 또는 양 끝에서 한 글자씩 안쪽으로 이동하며 두 문자가 모두 같은지 확인해도 됩니다. 빈 문자열과 한 글자 문자열은 항상 팰린드롬이고, 대소문자를 구분하므로 \"Aa\"는 팰린드롬이 아닙니다.",
+  "reviewed": false
+}

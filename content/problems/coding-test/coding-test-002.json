@@ -1,0 +1,58 @@
+{
+  "id": "coding-test-002",
+  "type": "coding-test",
+  "title": "문자열 뒤집기",
+  "prompt": "문자열 s가 주어질 때, 문자의 순서를 거꾸로 뒤집은 문자열을 반환하는 solution 함수를 작성하세요.",
+  "examples": [
+    {
+      "input": "s = \"hello\"",
+      "output": "\"olleh\""
+    },
+    {
+      "input": "s = \"파이썬\"",
+      "output": "\"썬이파\""
+    }
+  ],
+  "starterCode": "def solution(s):\n    # 여기에 작성하세요\n    pass\n",
+  "functionName": "solution",
+  "tests": [
+    {
+      "args": [
+        "hello"
+      ],
+      "expected": "olleh"
+    },
+    {
+      "args": [
+        "파이썬"
+      ],
+      "expected": "썬이파"
+    },
+    {
+      "args": [
+        ""
+      ],
+      "expected": ""
+    },
+    {
+      "args": [
+        "a"
+      ],
+      "expected": "a"
+    },
+    {
+      "args": [
+        "ab cd"
+      ],
+      "expected": "dc ba"
+    },
+    {
+      "args": [
+        "racecar"
+      ],
+      "expected": "racecar"
+    }
+  ],
+  "explanation": "문자열의 마지막 문자부터 첫 문자까지 차례로 이어 붙이면 뒤집힌 문자열이 됩니다. 파이썬에서는 슬라이싱 s[::-1]로 한 번에 뒤집을 수 있습니다. 빈 문자열과 한 글자 문자열은 뒤집어도 그대로입니다.",
+  "reviewed": false
+}

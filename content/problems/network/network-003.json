@@ -1,0 +1,15 @@
+{
+  "id": "network-003",
+  "type": "network",
+  "title": "TCP 3-way handshake",
+  "prompt": "클라이언트와 서버가 TCP 연결을 맺는 3-way handshake의 순서로 올바른 것은 무엇일까요?",
+  "choices": [
+    "SYN → ACK → FIN",
+    "ACK → SYN → SYN+ACK",
+    "SYN → SYN+ACK → ACK",
+    "FIN → ACK → SYN"
+  ],
+  "answerIndex": 2,
+  "explanation": "클라이언트가 연결 요청(SYN)을 보내면, 서버가 요청을 받았다는 확인과 자신의 연결 요청을 함께 담은 SYN+ACK로 응답하고, 클라이언트가 마지막으로 ACK를 보내 연결이 성립합니다. FIN은 연결을 맺을 때가 아니라 끊을 때 쓰는 플래그입니다.",
+  "reviewed": false
+}

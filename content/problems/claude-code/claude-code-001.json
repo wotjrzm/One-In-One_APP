@@ -1,0 +1,15 @@
+{
+  "id": "claude-code-001",
+  "type": "claude-code",
+  "title": "CLAUDE.md의 역할",
+  "prompt": "Claude Code를 쓰는 프로젝트 루트에 CLAUDE.md 파일을 두는 주된 이유는 무엇일까요?",
+  "choices": [
+    "Claude Code의 설치 버전을 고정하기 위해",
+    "빌드·테스트 명령, 코딩 규칙 같은 프로젝트 지침을 매 세션 시작 시 Claude에게 알려 주기 위해",
+    "Claude가 실행할 수 있는 명령을 강제로 차단하기 위해",
+    "Claude와 나눈 대화 기록을 백업하기 위해"
+  ],
+  "answerIndex": 1,
+  "explanation": "CLAUDE.md는 사용자가 직접 작성하는 지속적인 지침 파일로, 세션이 시작될 때마다 컨텍스트로 불러와집니다. 그래서 빌드·테스트 명령이나 코딩 규칙처럼 매번 설명해야 할 내용을 적어 두면 좋습니다. 다만 Claude는 이 내용을 강제 설정이 아닌 참고할 맥락으로 다루므로, 어떤 동작을 반드시 막아야 한다면 훅(PreToolUse)이나 권한 규칙을 써야 합니다.",
+  "reviewed": false
+}

@@ -1,0 +1,98 @@
+{
+  "id": "coding-test-007",
+  "type": "coding-test",
+  "title": "중복 제거",
+  "prompt": "정수 리스트 nums가 주어질 때, 중복된 값을 제거하되 처음 등장한 순서를 그대로 유지한 리스트를 반환하는 solution 함수를 작성하세요.",
+  "examples": [
+    {
+      "input": "nums = [1, 2, 2, 3, 1]",
+      "output": "[1, 2, 3]"
+    },
+    {
+      "input": "nums = [5, 5, 5]",
+      "output": "[5]"
+    }
+  ],
+  "starterCode": "def solution(nums):\n    # 여기에 작성하세요\n    pass\n",
+  "functionName": "solution",
+  "tests": [
+    {
+      "args": [
+        [
+          1,
+          2,
+          2,
+          3,
+          1
+        ]
+      ],
+      "expected": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "args": [
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "expected": [
+        5
+      ]
+    },
+    {
+      "args": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "args": [
+        [
+          7
+        ]
+      ],
+      "expected": [
+        7
+      ]
+    },
+    {
+      "args": [
+        [
+          3,
+          -1,
+          3,
+          -1,
+          0
+        ]
+      ],
+      "expected": [
+        3,
+        -1,
+        0
+      ]
+    },
+    {
+      "args": [
+        [
+          4,
+          3,
+          2,
+          1
+        ]
+      ],
+      "expected": [
+        4,
+        3,
+        2,
+        1
+      ]
+    }
+  ],
+  "explanation": "이미 본 값을 저장할 집합(set)과 결과 리스트를 만들고, 원소를 순서대로 보면서 집합에 없는 값만 결과에 추가합니다. set(nums)로 바로 바꾸면 중복은 사라지지만 순서가 보장되지 않아 문제 조건을 만족하지 못할 수 있습니다. 집합으로 확인하면 각 원소를 빠르게 검사할 수 있습니다.",
+  "reviewed": false
+}

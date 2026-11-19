@@ -1,0 +1,15 @@
+{
+  "id": "network-004",
+  "type": "network",
+  "title": "DNS의 역할",
+  "prompt": "브라우저 주소창에 www.example.com 을 입력했을 때, DNS가 하는 일은 무엇일까요?",
+  "choices": [
+    "웹 페이지의 내용을 암호화한다",
+    "IP 주소를 기기마다 자동으로 나누어 준다",
+    "웹 서버의 HTML 파일을 압축해 전송한다",
+    "도메인 이름을 해당 서버의 IP 주소로 바꿔 준다"
+  ],
+  "answerIndex": 3,
+  "explanation": "DNS(Domain Name System)는 사람이 기억하기 쉬운 도메인 이름을 컴퓨터가 통신에 쓰는 IP 주소로 변환해 주는 시스템입니다. 기기에 IP 주소를 자동으로 나누어 주는 것은 DHCP의 역할이라 혼동하기 쉽습니다. 암호화는 HTTPS(TLS)가 담당합니다.",
+  "reviewed": false
+}
